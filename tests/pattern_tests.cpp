@@ -95,9 +95,31 @@ int main() {
         require(commuting_key(parse_moves("R R")) != commuting_key(parse_moves("R2")), "Trace deduplication rewrote algebraically equivalent words");
         {
             auto r = request("R2", "R", 2);
+            r.forbid_consecutive_same_symbol = false;
             auto report = enumerate_pattern(r);
             verified(r, report);
-            require(report.solutions.size() == 1 && report.solutions[0].turn_cost == 2, "Restricted powers lost the R R solution");
+            require(report.solutions.size() == 1 && report.solutions[0].turn_cost == 2, "Opt-in restricted powers lost the R R solution");
+        }
+        {
+            // Default forbid_consecutive_same_symbol must truly ban F2: never emit F F, F' F', or F B F!
+            auto r = request("F2", "F F'", 2);
+            auto report = enumerate_pattern(r);
+            verified(r, report);
+            require(report.solutions.empty(), "Banning F2 still emitted F F / F' F'");
+            PatternSolution fake_ff{parse_moves("F F"), 2, 0, 0, apply_pattern(r.pattern, parse_moves("F F"))};
+            require(!verify_pattern_solution(r, fake_ff), "Verifier accepted consecutive F F when F2 is banned");
+
+            auto r2 = request("F2 B", "F F' B B2 B'", 3);
+            auto plain2 = enumerate_pattern(r2);
+            verified(r2, plain2);
+            require(plain2.solutions.empty(), "Banning F2 still synthesized F2 via commuting F B F");
+            r2.heuristic = PatternHeuristic::Standard;
+            r2.memoize_dead_ends = true;
+            auto pruned2 = enumerate_pattern(r2);
+            verified(r2, pruned2);
+            require(pruned2.solutions.empty(), "Pruned search synthesized banned F2 via F B F");
+            PatternSolution fake_fbf{parse_moves("F B' F"), 3, 0, 0, apply_pattern(r2.pattern, parse_moves("F B' F"))};
+            require(!verify_pattern_solution(r2, fake_fbf), "Verifier accepted F B' F synthesizing banned F2");
         }
         for (auto scramble : {"r U", "M U", "l R r", "R U R'", "F2 R' U", "x R U"}) {
             auto r = request(scramble, "R R2 R' U U2 U' r r2 r' M M2 M' x x'", 3);

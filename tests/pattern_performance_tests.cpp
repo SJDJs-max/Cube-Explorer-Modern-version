@@ -57,6 +57,7 @@ bool reference_valid(const PatternRequest& request, const PatternSolution& solut
 }
 void compare(PatternRequest request, const std::vector<Move>& moves) {
     request.allowed_moves = all_moves(); request.remove_u_symmetric_prefix = false;
+    request.forbid_consecutive_same_symbol = false;
     request.reject_alternating_triples = false;
     CubeState reference; reference.frame = initial(request).frame;
     PatternSolution solution{moves, turn_count(moves), rotation_count(moves), 0,

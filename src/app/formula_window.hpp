@@ -28,6 +28,7 @@ class FormulaWindow final : public QDialog {
     QToolButton *mccParamsBtn_ = nullptr;
     bool mccIgnoreAuf_ = true;
     MccParams mccParams_{};
+    std::chrono::steady_clock::time_point lastLiveSort_{};
     QPlainTextEdit *output_ = nullptr;
     QPushButton *start_ = nullptr, *clear_ = nullptr, *add_ = nullptr;
     QGroupBox *moveGroup_ = nullptr;

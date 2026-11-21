@@ -812,6 +812,22 @@ bool can_quotient_free_rotations(std::span<const Move> allowed, std::uint8_t ini
     return result;
 }
 
+const std::array<std::array<bool, 54>, 54>& commute_table() {
+    static const auto table = [] {
+        std::array<std::array<bool, 54>, 54> t{};
+        for (int a = 0; a < 54; ++a)
+            for (int b = 0; b < 54; ++b)
+                t[a][b] = cube::apply(cube::apply(CubeState{}, move_from_index(a)), move_from_index(b)) ==
+                          cube::apply(cube::apply(CubeState{}, move_from_index(b)), move_from_index(a));
+        return t;
+    }();
+    return table;
+}
+
+bool moves_commute(Move a, Move b) noexcept {
+    return commute_table()[move_index(a)][move_index(b)];
+}
+
 struct WorkerHalt {};
 struct TaskLocalCap {};
 
@@ -1063,9 +1079,12 @@ struct Search {
             entry.key[pos] = static_cast<std::uint8_t>(move_names.find(last.symbol) + 1);
             for (int k = 1; k <= 3; ++k) if (redundant_same_symbol(Move{last.symbol, static_cast<std::uint8_t>(k)}))
                 entry.key[pos + 1] |= static_cast<std::uint8_t>(1u << k);
-            if (request.reject_alternating_triples && path.size() >= 2) {
+            if (path.size() >= 2) {
                 const auto previous = path[path.size() - 2];
-                if (violates_alternating_triple(path, previous)) entry.key[pos + 2] = static_cast<std::uint8_t>(move_names.find(previous.symbol) + 1);
+                const bool alt = request.reject_alternating_triples && violates_alternating_triple(path, previous);
+                const bool comm_ban = request.forbid_consecutive_same_symbol && !previous.is_rotation() &&
+                                      previous.symbol != last.symbol && moves_commute(previous, last);
+                if (alt || comm_ban) entry.key[pos + 2] = static_cast<std::uint8_t>(move_index(previous) + 1);
             }
         }
         pos += 3;
@@ -1271,20 +1290,25 @@ struct Search {
 
     bool redundant_same_symbol(std::span<const Move> prefix, Move next) const {
         if (prefix.empty() || prefix.back().symbol != next.symbol) return false;
+        if (request.forbid_consecutive_same_symbol) return true;
         const auto combined = static_cast<std::uint8_t>((prefix.back().power + next.power) % 4);
         return combined == 0 || allowed[move_index(Move{next.symbol, combined})];
     }
     bool redundant_same_symbol(Move next) const { return redundant_same_symbol(path, next); }
 
+    bool violates_banned_commuting_triple(std::span<const Move> prefix, Move next) const {
+        if (!request.forbid_consecutive_same_symbol || prefix.size() < 2 || next.is_rotation()) return false;
+        const auto a = prefix[prefix.size() - 2];
+        const auto b = prefix.back();
+        if (a.is_rotation() || b.is_rotation() || a.symbol != next.symbol || b.symbol == next.symbol) return false;
+        if (!moves_commute(a, b)) return false;
+        const auto combined = static_cast<std::uint8_t>((a.power + next.power) % 4);
+        return combined == 0 || !allowed[move_index(Move{next.symbol, combined})];
+    }
+
     bool canonical_trace() {
         if (!request.deduplicate_commuting || path.empty()) return true;
-        static const auto commutes = [] {
-            std::array<std::array<bool, 54>, 54> table{};
-            for (int a = 0; a < 54; ++a) for (int b = 0; b < 54; ++b)
-                table[a][b] = cube::apply(cube::apply(CubeState{}, move_from_index(a)), move_from_index(b)) ==
-                    cube::apply(cube::apply(CubeState{}, move_from_index(b)), move_from_index(a));
-            return table;
-        }();
+        const auto& commutes = commute_table();
         // A history set grows forever in an unbounded stream. Instead choose
         // exactly one admissible topological ordering of this trace's
         // non-commutation graph. Grammar and first-goal checks are essential:
@@ -1319,6 +1343,7 @@ struct Search {
                     for (const auto& rotation : rotations[rotation_frame])
                         if (std::ranges::equal(segment, rotation.moves)) { valid_segment = true; break; }
                     if (!valid_segment || redundant_same_symbol(candidate, move)) continue;
+                    if (violates_banned_commuting_triple(candidate, move)) continue;
                     if (request.reject_alternating_triples && violates_alternating_triple(candidate, move)) continue;
                     if (paid == 0 && move.symbol == 'U' && redundant_root_u[move.power] && logical_face(state.frame, Face::U) == Face::U) continue;
                 }
@@ -1405,6 +1430,7 @@ struct Search {
                 if (request.max_symbol_uses[sym] >= 0 && used_symbols[sym] >= request.max_symbol_uses[sym]) continue;
                 const auto m = transition.move;
                 if (redundant_same_symbol(m)) continue;
+                if (violates_banned_commuting_triple(path, m)) continue;
                 if (request.reject_alternating_triples && violates_alternating_triple(path, m)) continue;
                 if (turns == 0 && redundant_root_u[m.power] && m.symbol == 'U' && logical_face(oriented.frame, Face::U) == Face::U) continue;
                 CursorState next_cur;
@@ -1486,6 +1512,7 @@ struct Search {
                             if (request.max_symbol_uses[sym2] >= 0 && used_symbols[sym2] >= request.max_symbol_uses[sym2]) continue;
                             const auto m2 = t2.move;
                             if (redundant_same_symbol(prefix1r, m2)) continue;
+                            if (violates_banned_commuting_triple(prefix1r, m2)) continue;
                             if (request.reject_alternating_triples && violates_alternating_triple(prefix1r, m2)) continue;
                             CursorState cur2;
                             if (!advance_fast_cursors(cur1, t2.effect_id, t2.transform->next_frame, depth - 2, cur2))
@@ -1758,9 +1785,25 @@ Validation verify_pattern_solution(const PatternRequest& request, const PatternS
     std::array<bool, 54> allowed{};
     for (auto m : request.allowed_moves) allowed[move_index(m)] = true;
     for (auto m : solution.moves) if (!allowed[move_index(m)]) return {false, "Result contains a disabled action."};
-    for (std::size_t i = 0; request.reject_alternating_triples && i < solution.moves.size(); ++i)
-        if (violates_alternating_triple(std::span<const Move>(solution.moves.data(), i), solution.moves[i]))
+    for (std::size_t i = 0; i < solution.moves.size(); ++i) {
+        const auto m = solution.moves[i];
+        const auto prefix = std::span<const Move>(solution.moves.data(), i);
+        if (request.forbid_consecutive_same_symbol && !m.is_rotation() && i >= 1 &&
+            solution.moves[i - 1].symbol == m.symbol)
+            return {false, "Result contains consecutive moves on the same layer."};
+        if (request.forbid_consecutive_same_symbol && !m.is_rotation() && i >= 2) {
+            const auto a = solution.moves[i - 2];
+            const auto b = solution.moves[i - 1];
+            if (!a.is_rotation() && !b.is_rotation() && a.symbol == m.symbol && b.symbol != m.symbol &&
+                moves_commute(a, b)) {
+                const auto combined = static_cast<std::uint8_t>((a.power + m.power) % 4);
+                if (combined == 0 || !allowed[move_index(Move{m.symbol, combined})])
+                    return {false, "Result synthesizes a disabled or cancelling move across a commuting opposite layer."};
+            }
+        }
+        if (request.reject_alternating_triples && violates_alternating_triple(prefix, m))
             return {false, "Result contains a forbidden alternating triple."};
+    }
     const auto start = initial_state(request);
     const auto goals = make_goals(request);
     static const VerificationGeometry independent;

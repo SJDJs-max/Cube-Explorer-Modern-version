@@ -284,6 +284,16 @@ int main(int argc, char **argv) {
                 if (m.symbol == 'F' && m.power == 3) hasFp = true;
             }
             require(hasF && !hasF2 && hasFp, "Per-move power ban must exclude F2 while keeping F and F'");
+            // Real search with F2 banned must NOT synthesize F F or F' F'!
+            for (char c : std::string("URFDLB"))
+                fine.findChild<QCheckBox *>("formulaMove_" + QString(c))->setChecked(c == 'F');
+            fine.smokeConfigure(pattern_from_cube(cube::apply(CubeState{}, parse_moves("F2"))), 2);
+            fine.startSearch();
+            waitIdle(fine);
+            require(fine.resultCount() == 0, "Banning F2 in FormulaWindow still emitted F F / F' F'");
+            for (char c : std::string("URFDLB"))
+                fine.findChild<QCheckBox *>("formulaMove_" + QString(c))->setChecked(true);
+            fine.setMovePowerEnabled(2, 1, true);
             // Max rotations spinbox must be disabled when rotations are unchecked, enabled when checked.
             auto *rotCat = fine.findChild<QCheckBox *>("formulaCategory_2");
             auto *maxRot = fine.findChild<QSpinBox *>("formulaMaxRotations");

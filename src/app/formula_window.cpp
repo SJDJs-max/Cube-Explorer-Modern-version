@@ -396,16 +396,21 @@ void FormulaWindow::showFineMovesDialog() {
         for (int p = 0; p < 3; ++p) {
             checks[s][p] = new QCheckBox(moveTokenLabel(s, p));
             checks[s][p]->setChecked(movePowerEnabled_[s][p]);
+            if (!powerBoxes_[p]->isChecked()) {
+                checks[s][p]->setEnabled(false);
+                checks[s][p]->setToolTip(trUi("全局“转动角度”已关闭此列", "Disabled by global Turn Angles"));
+            }
             grid->addWidget(checks[s][p], s + 1, p + 1);
         }
         limits[s] = new QSpinBox;
         limits[s]->setRange(-1, 30);
+        limits[s]->setFixedWidth(84);
         limits[s]->setSpecialValueText(unlimited);
         limits[s]->setValue(maxSymbolUses_[s]);
         grid->addWidget(limits[s], s + 1, 4);
     }
     scroll->setWidget(content);
-    scroll->setMinimumSize(420, 360);
+    scroll->setMinimumSize(460, 380);
     root->addWidget(scroll, 1);
 
     auto *quickRow = new QHBoxLayout;
@@ -446,8 +451,16 @@ void FormulaWindow::showFineMovesDialog() {
 void FormulaWindow::showMccParamsDialog() {
     QDialog dlg(this);
     dlg.setWindowTitle(trUi("MCC 手感评分参数", "MCC Ergonomics Parameters"));
+    dlg.setFixedWidth(345);
     auto *root = new QVBoxLayout(&dlg);
+    root->setContentsMargins(14, 12, 14, 12);
+    root->setSpacing(10);
     auto *form = new QFormLayout;
+    form->setFieldGrowthPolicy(QFormLayout::FieldsStayAtSizeHint);
+    form->setLabelAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+    form->setFormAlignment(Qt::AlignLeft | Qt::AlignTop);
+    form->setHorizontalSpacing(14);
+    form->setVerticalSpacing(6);
     struct Field {
         QString label;
         double *target;
@@ -472,18 +485,31 @@ void FormulaWindow::showMccParamsDialog() {
         sb->setRange(0.0, 20.0);
         sb->setDecimals(2);
         sb->setSingleStep(0.05);
+        sb->setFixedWidth(96);
         sb->setValue(*f.target);
         form->addRow(f.label, sb);
         boxes.push_back(sb);
     }
     root->addLayout(form);
 
-    auto *ignoreAufBox = new QCheckBox(
-        trUi("去起手 U（忽略 pre-AUF：开头 U / d+U 不计入 MCC，不改公式步数）",
-             "Ignore pre-AUF (exclude leading U / d+U from MCC only)"));
+    auto *sep = new QFrame;
+    sep->setFrameShape(QFrame::HLine);
+    sep->setFrameShadow(QFrame::Sunken);
+    root->addWidget(sep);
+
+    auto *ignoreAufBox = new QCheckBox(trUi("去起手 U（忽略 pre-AUF）", "Ignore pre-AUF (leading U)"));
     ignoreAufBox->setObjectName("formulaMccIgnoreAuf");
     ignoreAufBox->setChecked(mccIgnoreAuf_);
     root->addWidget(ignoreAufBox);
+
+    auto *aufHint = new QLabel(trUi("仅在计算 MCC 时忽略开头的 U（或 d/D 后的 U），不修改公式本身与步数。",
+                                    "Excludes leading U (or U after D/d) from MCC only; moves and turn count stay unchanged."));
+    aufHint->setWordWrap(true);
+    auto hintPal = aufHint->palette();
+    hintPal.setColor(QPalette::WindowText, palette().color(QPalette::PlaceholderText));
+    aufHint->setPalette(hintPal);
+    aufHint->setStyleSheet("font-size: 12px;");
+    root->addWidget(aufHint);
 
     auto *btns = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel |
                                       QDialogButtonBox::RestoreDefaults);
@@ -715,9 +741,16 @@ void FormulaWindow::configureState(bool busy) {
 
 void FormulaWindow::appendResult(ResultData data) {
     data.mcc = compute_mcc(data.moves, mccParams_, mccIgnoreAuf_);
-    if (!mccSort_ || mccSort_->currentIndex() == 0)
-        output_->appendPlainText(formatResultLine(data));
     results_.push_back(std::move(data));
+    if (!mccSort_ || mccSort_->currentIndex() == 0) {
+        output_->appendPlainText(formatResultLine(results_.back()));
+    } else if (results_.size() <= 1000) {
+        const auto now = std::chrono::steady_clock::now();
+        if (results_.size() == 1 || now - lastLiveSort_ >= std::chrono::milliseconds(400)) {
+            lastLiveSort_ = now;
+            rebuildOutput();
+        }
+    }
     updateStatusLine();
     add_->setEnabled(true);
 }

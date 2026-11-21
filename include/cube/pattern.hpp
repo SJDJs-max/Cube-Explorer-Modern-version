@@ -54,6 +54,7 @@ struct PatternRequest {
     bool collect_solutions = true;
     bool modulo_u = true;
     bool remove_u_symmetric_prefix = true;
+    bool forbid_consecutive_same_symbol = true;
     bool reject_alternating_triples = true;
     bool deduplicate_commuting = true;
     // Cache only completely explored subtrees having no eligible completion,
