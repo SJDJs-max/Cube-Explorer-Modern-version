@@ -1,4 +1,14 @@
+<div align="center">
+
 # Cube Explorer - Modern version
+
+**简体中文** | [English](README.en.md)
+
+[![Release](https://img.shields.io/github/v/release/SJDJs-max/Cube-Explorer-Modern-version?style=flat-square)](https://github.com/SJDJs-max/Cube-Explorer-Modern-version/releases)
+[![License: GPL-3.0](https://img.shields.io/badge/License-GPL--3.0-blue.svg?style=flat-square)](LICENSE)
+[![Platform](https://img.shields.io/badge/Platform-Windows%20x64-lightgrey.svg?style=flat-square)](https://github.com/SJDJs-max/Cube-Explorer-Modern-version/releases)
+
+</div>
 
 基于 **Herbert Kociemba** 原始 **Cube Explorer 5.15（HTM）** 深度现代化重构的 Windows 桌面端三阶魔方求解与公式研究工具。采用 **C++20 + Qt 6** 原生构建，遵循 **GPL-3.0** 开源协议。
 
