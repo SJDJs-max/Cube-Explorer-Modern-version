@@ -115,6 +115,22 @@ int main(int argc, char **argv) {
         check(row.patternName() == "keep name" && row.number() == 7 && row.generated(),
               "replacement preserves identity and direction");
 
+        row.setViewMode(1);
+        application.processEvents();
+        check(row.thumbnail()->view() == CubeCanvas::View::Net2D,
+              "result row thumbnail must support 2D net view");
+        click(row, cubeCenter, Qt::LeftButton);
+        check(selected == 3, "2D net thumbnail keeps click selection");
+        row.setViewMode(2);
+        application.processEvents();
+        check(row.thumbnail()->view() == CubeCanvas::View::Cube3D,
+              "result row thumbnail must support 3D cube view");
+        click(row, cubeCenter, Qt::LeftButton);
+        check(selected == 4, "3D cube thumbnail keeps click selection");
+        row.setViewMode(0);
+        check(row.thumbnail()->view() == CubeCanvas::View::Classic,
+              "result row thumbnail returns cleanly to Classic view");
+
         ResultRow formulaRow(original, false, true);
         ResultData formulaData;
         formulaData.formula = true;

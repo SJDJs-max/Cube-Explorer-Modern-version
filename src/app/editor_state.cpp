@@ -243,17 +243,47 @@ void apply_moves_raw(std::string& raw,std::array<std::int8_t,6>& centers,std::sp
 
 std::vector<Move> parse_legacy_moves(std::string_view text) {
     std::string normal;
+    normal.reserve(text.size());
     for(std::size_t i=0;i<text.size();++i) {
         const auto c=static_cast<unsigned char>(text[i]);
         if(c==0xc2&&i+1<text.size()&&static_cast<unsigned char>(text[i+1])==0xb2){normal+='2';++i;}
+        else if(c==0xc2&&i+1<text.size()&&static_cast<unsigned char>(text[i+1])==0xa0){normal+=' ';++i;}
         else if(c==0xb2)normal+='2'; // Legacy ANSI squared exponent.
+        else if(c==0xca&&i+1<text.size()&&static_cast<unsigned char>(text[i+1])==0xbc){normal+='\'';++i;}
+        else if(c==0xe2&&i+2<text.size()&&static_cast<unsigned char>(text[i+1])==0x80&&
+                (static_cast<unsigned char>(text[i+2])==0x98||static_cast<unsigned char>(text[i+2])==0x99||
+                 static_cast<unsigned char>(text[i+2])==0xb2)){normal+='\'';i+=2;}
+        else if(c==0xe2&&i+2<text.size()&&
+                ((static_cast<unsigned char>(text[i+1])==0x88&&static_cast<unsigned char>(text[i+2])==0x92)||
+                 (static_cast<unsigned char>(text[i+1])==0x80&&static_cast<unsigned char>(text[i+2])==0x93))){
+            normal+='\'';i+=2;if(i+1<text.size()&&text[i+1]=='1')++i;
+        }
+        else if(c==0xe3&&i+2<text.size()&&static_cast<unsigned char>(text[i+1])==0x80&&
+                static_cast<unsigned char>(text[i+2])==0x80){normal+=' ';i+=2;}
+        else if(c==0xef&&i+2<text.size()&&static_cast<unsigned char>(text[i+1])==0xbc){
+            const auto b2=static_cast<unsigned char>(text[i+2]);
+            if(b2==0x87){normal+='\'';i+=2;}
+            else if(b2==0x88){normal+='(';i+=2;}
+            else if(b2==0x89){normal+=')';i+=2;}
+            else if(b2==0xbb){normal+='[';i+=2;}
+            else if(b2==0xbd){normal+=']';i+=2;}
+            else if(b2>=0x90&&b2<=0x99){normal+=static_cast<char>('0'+(b2-0x90));i+=2;}
+            else if(b2>=0xa1&&b2<=0xba){normal+=static_cast<char>('A'+(b2-0xa1));i+=2;}
+            else normal+=static_cast<char>(c);
+        }
+        else if(c==0xef&&i+2<text.size()&&static_cast<unsigned char>(text[i+1])==0xbd&&
+                static_cast<unsigned char>(text[i+2])>=0x81&&static_cast<unsigned char>(text[i+2])<=0x9a){
+            normal+=static_cast<char>('a'+(static_cast<unsigned char>(text[i+2])-0x81));i+=2;
+        }
+        else if(c=='`')normal+='\'';
         else if(c=='-'){normal+='\'';if(i+1<text.size()&&text[i+1]=='1')++i;}
         else normal+=static_cast<char>(c);
     }
     auto read_power=[&](std::size_t& pos){
         int power=1;
         if(pos<normal.size()&&normal[pos]=='2'){power=2;++pos;if(pos<normal.size()&&normal[pos]=='\'')++pos;}
-        else if(pos<normal.size()&&(normal[pos]=='3'||normal[pos]=='\'')){power=3;++pos;}
+        else if(pos<normal.size()&&normal[pos]=='\''){++pos;if(pos<normal.size()&&normal[pos]=='2'){power=2;++pos;}else power=3;}
+        else if(pos<normal.size()&&normal[pos]=='3'){power=3;++pos;}
         return power;
     };
     std::string expanded;

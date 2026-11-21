@@ -81,7 +81,9 @@ int main(){
         for(const auto& [legacy,modern]:std::vector<std::pair<std::string,std::string>>{
             {"Rs","R L'"},{"Ra","R L"},{"Ds'","D' U"},{"F2s","F2 B2"},{"B'a","B' F'"},
             {"(Rs U-1 Ra2)3","(R L' U' R2 L2)3"},{"r U- R-1 r3 U²","r U' R' r' U2"},
-            {"(M E S)2'","(M E S)2'"},{"Rw U Rw'","r U r'"},{"(R U)2","R U R U"}}){
+            {"(M E S)2'","(M E S)2'"},{"Rw U Rw'","r U r'"},{"(R U)2","R U R U"},
+            {"RUR'U'","R U R' U'"},{"R'2U'2r'2Rw'2","R2 U2 r2 r2"},{"R-2","R2"},
+            {"(RUR'U')'2","U R U' R' U R U' R'"},{"Rs'2","R2 L2"}}){
             const auto a=parse_legacy_moves(legacy),b=parse_moves(modern);
             require(a==b,"Legacy notation expansion did not match exact modern actions");
             require(cube::apply(CubeState{},a)==cube::apply(CubeState{},b),"Legacy notation changed physical action");

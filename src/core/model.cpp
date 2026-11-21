@@ -231,7 +231,55 @@ int permutation_parity(const std::array<std::uint8_t,N>& p) {
     return parity;
 }
 
+std::string normalize_notation(std::string_view input) {
+    std::string out;
+    out.reserve(input.size());
+    for (std::size_t i = 0; i < input.size(); ++i) {
+        const auto b0 = static_cast<unsigned char>(input[i]);
+        if (b0 == '`') {
+            out += '\'';
+        } else if (b0 == 0xC2 && i + 1 < input.size()) {
+            const auto b1 = static_cast<unsigned char>(input[i + 1]);
+            if (b1 == 0xB2) { out += '2'; ++i; continue; } // ²
+            if (b1 == 0xA0) { out += ' '; ++i; continue; } // NBSP
+            out += static_cast<char>(b0);
+        } else if (b0 == 0xCA && i + 1 < input.size() && static_cast<unsigned char>(input[i + 1]) == 0xBC) {
+            out += '\''; ++i; // ʼ
+        } else if (b0 == 0xE2 && i + 2 < input.size()) {
+            const auto b1 = static_cast<unsigned char>(input[i + 1]);
+            const auto b2 = static_cast<unsigned char>(input[i + 2]);
+            if (b1 == 0x80 && (b2 == 0x98 || b2 == 0x99 || b2 == 0xB2)) {
+                out += '\''; i += 2; continue; // ‘ ’ ′
+            }
+            out += static_cast<char>(b0);
+        } else if (b0 == 0xE3 && i + 2 < input.size() &&
+                   static_cast<unsigned char>(input[i + 1]) == 0x80 &&
+                   static_cast<unsigned char>(input[i + 2]) == 0x80) {
+            out += ' '; i += 2; // Fullwidth space
+        } else if (b0 == 0xEF && i + 2 < input.size()) {
+            const auto b1 = static_cast<unsigned char>(input[i + 1]);
+            const auto b2 = static_cast<unsigned char>(input[i + 2]);
+            if (b1 == 0xBC) {
+                if (b2 == 0x87) { out += '\''; i += 2; continue; }
+                if (b2 == 0x88) { out += '('; i += 2; continue; }
+                if (b2 == 0x89) { out += ')'; i += 2; continue; }
+                if (b2 == 0xBB) { out += '['; i += 2; continue; }
+                if (b2 == 0xBD) { out += ']'; i += 2; continue; }
+                if (b2 >= 0x90 && b2 <= 0x99) { out += static_cast<char>('0' + (b2 - 0x90)); i += 2; continue; }
+                if (b2 >= 0xA1 && b2 <= 0xBA) { out += static_cast<char>('A' + (b2 - 0xA1)); i += 2; continue; }
+            } else if (b1 == 0xBD && b2 >= 0x81 && b2 <= 0x9A) {
+                out += static_cast<char>('a' + (b2 - 0x81)); i += 2; continue;
+            }
+            out += static_cast<char>(b0);
+        } else {
+            out += static_cast<char>(b0);
+        }
+    }
+    return out;
+}
+
 class MoveParser {
+    std::string owned;
     std::string_view text;
     std::size_t offset{};
     static constexpr std::size_t maximum_moves=100000;
@@ -263,6 +311,8 @@ class MoveParser {
             if(c=='('||c=='[') {
                 ++offset;
                 auto part=sequence(c=='('?')':']',nesting+1);
+                bool invert_group=false;
+                if(offset<text.size() && text[offset]=='\'') {invert_group=true;++offset;}
                 unsigned repeats=1;
                 if(c=='(' && offset<text.size() && std::isdigit(static_cast<unsigned char>(text[offset]))) {
                     repeats=0;
@@ -271,7 +321,8 @@ class MoveParser {
                         if(repeats>maximum_moves)fail("Repetition count is too large");
                     }
                 }
-                if(offset<text.size() && text[offset]=='\'') {part=inverse(part);++offset;}
+                if(!invert_group && offset<text.size() && text[offset]=='\'') {invert_group=true;++offset;}
+                if(invert_group) part=inverse(part);
                 if(part.size()*repeats>maximum_moves-result.size())fail("Formula is too long");
                 for(unsigned i=0;i<repeats;++i) result.insert(result.end(),part.begin(),part.end());
                 continue;
@@ -279,14 +330,21 @@ class MoveParser {
             if(move_names.find(c)==std::string_view::npos)fail("Unknown move");
             ++offset;
             Move move{c,1};
-            // Rw is accepted as an alias of r. Lowercase remains the canonical notation.
-            if(face_names.find(c)!=std::string_view::npos && offset<text.size() && text[offset]=='w') {
+            // Rw / RW is accepted as an alias of r. Lowercase remains the canonical notation.
+            if(face_names.find(c)!=std::string_view::npos && offset<text.size() && (text[offset]=='w'||text[offset]=='W')) {
                 move.symbol=static_cast<char>(std::tolower(static_cast<unsigned char>(c)));++offset;
             }
             if(offset<text.size() && text[offset]=='2') {
                 move.power=2;++offset;
                 if(offset<text.size() && text[offset]=='\'')++offset;
-            } else if(offset<text.size() && (text[offset]=='\''||text[offset]=='3')) {
+            } else if(offset<text.size() && text[offset]=='\'') {
+                ++offset;
+                if(offset<text.size() && text[offset]=='2') {
+                    move.power=2;++offset;
+                } else {
+                    move.power=3;
+                }
+            } else if(offset<text.size() && text[offset]=='3') {
                 move.power=3;++offset;
             }
             result.push_back(move);
@@ -294,7 +352,7 @@ class MoveParser {
         }
     }
 public:
-    explicit MoveParser(std::string_view input):text(input){}
+    explicit MoveParser(std::string_view input):owned(normalize_notation(input)),text(owned){}
     std::vector<Move> run(){return sequence(0,0);}
 };
 

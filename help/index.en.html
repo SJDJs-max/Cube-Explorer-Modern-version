@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cube Explorer - Modern version · User Guide &amp; Reference</title>
+<style>
+:root{color-scheme:light;--ink:#203849;--muted:#657887;--teal:#167c79;--line:#dbe5eb}*{box-sizing:border-box}body{margin:0;background:#f3f6f9;color:var(--ink);font:16px/1.8 "Segoe UI",Calibri,system-ui,sans-serif}header{padding:40px max(24px,calc((100vw - 1080px)/2));background:#203849;color:white;display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap}header p{color:#c3d9df;margin:8px 0 6px}h1{font-size:32px;margin:0}h2{font-size:25px;margin:0 0 18px;scroll-margin-top:20px}h3{font-size:18px;margin-top:28px}.lang-switch{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;border-radius:999px;background:rgba(255,255,255,.14);color:white;text-decoration:none;font-size:14px;font-weight:600;border:1px solid rgba(255,255,255,.24)}.lang-switch:hover{background:rgba(255,255,255,.24)}main{max-width:1128px;margin:24px auto;padding:0 24px}section{background:white;border:1px solid var(--line);border-radius:14px;padding:30px;margin:22px 0}nav{display:flex;flex-wrap:wrap;gap:12px 22px}a{color:var(--teal)}code,pre{font-family:Consolas,"Segoe UI",monospace}code{background:#edf3f6;padding:2px 5px;border-radius:4px}pre{padding:18px;background:#edf3f6;overflow:auto;font-size:14px;line-height:1.6}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border-bottom:1px solid var(--line);text-align:left;padding:11px;vertical-align:top}th{background:#f4f8fa}.note{border-left:4px solid var(--teal);padding:12px 18px;background:#eef8f6}.muted{color:var(--muted)}li{margin:7px 0}footer{padding:24px 0 45px;color:var(--muted)}@media(max-width:700px){main{padding:0 12px}section{padding:20px}h1{font-size:26px}table{display:block;overflow:auto}}
+</style>
+<header>
+  <div>
+    <h1>Cube Explorer - Modern version</h1>
+    <p>English User Guide · Modern Speedcubing Solver · Native MCC Scoring · MCP Batch API</p>
+    <small>Windows x64 · C++20 / Qt · GPL-3.0 · Based on Herbert Kociemba's Cube Explorer · Created by 云起Arrebol</small>
+  </div>
+  <a class="lang-switch" href="index.html">简体中文</a>
+</header>
+<main>
+<nav><a href="#start">Getting Started</a><a href="#views">Views &amp; Themes</a><a href="#input">Editor, Formula &amp; Shortcuts</a><a href="#results">Results &amp; Optimal</a><a href="#files">Save &amp; Load</a><a href="#formula">Formula, Wide &amp; MCC</a><a href="#search">Performance &amp; Safety</a><a href="#mcp">AI / MCP</a><a href="#algorithm">Source Overview</a><a href="#limits">License &amp; Credits</a></nav>
+
+<section id="start"><h2>Getting Started</h2>
+<p>Extract the portable package and launch <code>CubeExplorerModern.exe</code>. Keep the entire folder intact — Qt libraries and pruning data are bundled, so no external Python, Delphi, or Qt installation is required. All solving and verification run 100% locally offline.</p>
+<p>On launch, the left results pane starts collapsed so the sticker editor remains focused. At the top you can toggle <strong>Classic / 2D Net / 3D Cube</strong> views, <strong>English / Chinese UI</strong>, and <strong>Light / Dark Mode</strong>. Directly below the cube are one-click speedcubing presets (<code>ZBLS</code>, <code>OLL</code>, <code>F2L</code>, <code>OLLCP/COLL</code>) and the <code>Cross Solver</code> (Cross / XCross / XXCross / XXXCross), followed by Solve, Moves, Reset, and Formula Input controls.</p>
+<ol>
+  <li>Click any center sticker to pick a brush color, then paint stickers with Left / Shift / Ctrl / Right clicks — or enter a formula and press <code>Enter</code> (or <code>Ctrl+Enter</code> from anywhere in the window) to apply it directly.</li>
+  <li>Click <strong>Solve Cube</strong> or <strong>Generate Cube</strong>. Complete ordinary cubes prompt for Mode 1 vs Mode 2; partial patterns, orientation markers, or center constraints open Mode 2 (Formula Window) directly.</li>
+  <li><strong>Mode 1 · Ordinary Solver</strong>: Adds a row in the left list and runs Kociemba's Two-Phase solver. Check <strong>Opt</strong> on any row to run the multi-threaded exact optimal solver.</li>
+  <li><strong>Mode 2 · Formula Solver</strong>: Opens an independent window supporting outer, wide, slice, and rotation moves, per-move power bans, Modulo-U goals, and native MCC fingertrick sorting. Click <strong>Add Solutions to Main Window</strong> to save results into the left pane.</li>
+</ol>
+<table>
+  <tr><th>Mode</th><th>Best For</th><th>Goal &amp; Metric</th></tr>
+  <tr><td>Mode 1 · Ordinary</td><td>Complete 3×3×3 states; fast solves or proven optimal solutions</td><td>18 outer face moves (HTM), exact solved target</td></tr>
+  <tr><td>Mode 2 · Formula</td><td>Partial or full patterns (F2L, OLL, ZBLS, OLLCP, Cross/XCross)</td><td>Modulo-U by default; outer/wide/slice cost 1 each, rotations cost 0 (separately bounded)</td></tr>
+</table>
+</section>
+
+<section id="views"><h2>Synchronized Views, Language &amp; Themes</h2>
+<p>Switch between <strong>Classic</strong>, <strong>2D Net</strong>, and <strong>3D Cube</strong> using the top-left pill switcher, <em>Options → Cube View</em>, or the shortcut (default <code>F2</code>). <strong>Result thumbnails in the left pane automatically follow the active view mode</strong> (Classic, 2D, and 3D), and HTML exports capture the active view as well.</p>
+<p>In 3D view, drag with the left mouse button to orbit and scroll the mouse wheel to zoom; simple clicks still paint stickers or pick center colors without modifying the cube state.</p>
+<p>Use the top-right <strong>EN / 中文</strong> and theme buttons to switch language or Dark/Light mode at any time. Pressing <code>F1</code> opens the offline help page matching your active UI language. Colors, active view, theme, AutoFix, performance profile, and custom shortcuts are persisted in <code>data/preferences.ini</code>.</p>
+</section>
+
+<section id="input"><h2>Sticker Editor, Flexible Formula Input &amp; Custom Shortcuts</h2>
+<table>
+  <tr><th>Gesture</th><th>Action</th></tr>
+  <tr><td>Left click (non-center)</td><td>Paint the sticker with the active brush color.</td></tr>
+  <tr><td>Shift + Left click</td><td>Mark "ignore piece orientation" (cross-hatched pattern). Shift takes priority over Ctrl.</td></tr>
+  <tr><td>Ctrl + Left click</td><td>Mark "orientation only" (<code>@</code> single-hatch U sticker) without constraining piece identity.</td></tr>
+  <tr><td>Right / Middle click (non-center)</td><td>Clear only that single sticker.</td></tr>
+  <tr><td>Left click (center)</td><td>Pick that center's color as the active brush.</td></tr>
+  <tr><td>Right / Middle click (center)</td><td>Open center orientation editor when center constraints are enabled.</td></tr>
+</table>
+
+<h3>Flexible Formula Parsing</h3>
+<p>Formula input accepts standard space-separated moves as well as <strong>spaceless sequences</strong> and common notation variants:</p>
+<table>
+  <tr><th>Example Input</th><th>Canonical Moves</th><th>Notes</th></tr>
+  <tr><td><code>RUR'U'</code></td><td><code>R U R' U'</code></td><td>Spaceless parsing works for outer, wide, slice &amp; rotations (e.g. <code>rUR'U'r'FRF'</code>, <code>M2UM2U2</code>)</td></tr>
+  <tr><td><code>R'2</code> / <code>r'2</code> / <code>Rw'2</code></td><td><code>R2</code> / <code>r2</code> / <code>r2</code></td><td>Prime-before-2 half turns and <code>R2'</code> are accepted interchangeably</td></tr>
+  <tr><td><code>Rw</code> / <code>RW</code> / <code>r</code></td><td><code>r</code></td><td>Wide turns (outer + adjacent slice), counted as 1 move</td></tr>
+  <tr><td><code>M E S</code> / <code>x y z</code></td><td>Slices / Rotations</td><td>M/E/S follow L/D/F; x/y/z follow R/U/F</td></tr>
+  <tr><td><code>(R U)2</code> / <code>(R U)'2</code> / <code>R’U²</code></td><td>Grouped / Inverted / Unicode</td><td>Accepts curly quotes, superscript <code>²</code>, fullwidth punctuation, and legacy <code>R-1</code>/<code>Rs</code>/<code>Ra</code></td></tr>
+</table>
+<div class="note">In formulas, lowercase letters (e.g. <code>r</code>) denote wide turns. In 54-character facelet strings (<em>Edit → Input Facelet String</em>), lowercase letters denote orientation-ignored stickers.</div>
+
+<h3>Customizable Keyboard Shortcuts</h3>
+<p>Open <em>Options → Keyboard Shortcuts…</em> to customize keybindings for common actions or reset all defaults (both main Return and numpad Enter are handled automatically):</p>
+<table>
+  <tr><th>Action</th><th>Default Shortcut</th><th>Action</th><th>Default Shortcut</th></tr>
+  <tr><td>Apply Formula (works anywhere in window)</td><td><code>Ctrl+Enter</code></td><td>Cycle Cube View</td><td><code>F2</code></td></tr>
+  <tr><td>Apply Inverse Formula</td><td><code>Ctrl+Shift+Enter</code></td><td>Toggle Dark / Light Mode</td><td><code>Ctrl+Shift+D</code></td></tr>
+  <tr><td>Solve Current Cube</td><td><code>F5</code></td><td>Toggle Chinese / English UI</td><td><code>Ctrl+Shift+L</code></td></tr>
+  <tr><td>Generate Current Cube</td><td><code>F6</code></td><td>Reset Solved / Random Scramble</td><td><code>Ctrl+R</code> / <code>Ctrl+Shift+R</code></td></tr>
+  <tr><td>Cross Quick Solver</td><td><code>Ctrl+Shift+X</code></td><td>Focus Formula Input</td><td><code>Ctrl+L</code></td></tr>
+</table>
+<p>Legacy shortcuts remain available: <code>Enter</code> inside the formula box applies moves, <code>Delete</code> removes selected rows, <code>Ctrl+F</code> writes the last solver maneuver to <code>data/ctrlFsave.txt</code>, and <code>F1</code> opens this help page.</p>
+</section>
+
+<section id="results"><h2>Results Pane &amp; Multi-Threaded Optimal Search</h2>
+<p>Each row in the left results list displays a view-synced cube thumbnail, Solve/Gen toggle, maneuver (with <code>[MCC x.x]</code> for formula results), editable pattern name, <strong>Opt</strong> checkbox, and Run/Stop button. Click to select, <code>Ctrl</code>-click to toggle, <code>Shift</code>-click for ranges, and right-click the cube thumbnail for Copy, Transfer to Editor, Replay, Invert, Multiply, or Delete.</p>
+<p>Checking <strong>Opt</strong> and clicking Run starts the multi-threaded 3-axis coordinate IDA* optimal solver with a lazy exact 8-corner pruning table and forward/inverse root selection. The optimal marker <code>*</code> appears only after the solver mathematically proves no shorter maneuver exists.</p>
+</section>
+
+<section id="files"><h2>Saving, Loading &amp; Exporting</h2>
+<table>
+  <tr><th>Format</th><th>Purpose</th></tr>
+  <tr><td><code>.cex</code> Workspace</td><td>Preserves patterns, solve/generate direction, partial constraints, center orientations, exact moves, costs, and terminal states. Recommended for formula mode.</td></tr>
+  <tr><td>Legacy <code>.txt</code></td><td>Saves ordinary generator maneuvers <code>(nf) //name</code> and reads legacy 48-sticker Singmaster lines.</td></tr>
+  <tr><td>HTML / Print</td><td>Exports thumbnails in the active view mode alongside names, maneuvers, and move counts.</td></tr>
+</table>
+</section>
+
+<section id="formula"><h2>Formula Search, Fine-Grained Move Bans &amp; MCC Sorting</h2>
+<ul>
+  <li><strong>Modulo U</strong>: Enabled by default; stops as soon as the state reaches the target up to logical U/U'/U2 without appending trailing U turns. Any required leading U is preserved as a real move and bracketed as <code>[U]</code> for display only.</li>
+  <li><strong>Per-Move Power Bans</strong>: Left-click toggles a move letter; <strong>right-click any move checkbox</strong> to individually ban <code>90°</code>, <code>180°</code>, or <code>-90°</code>, or click <strong>Fine Moves…</strong> for the full 54-move matrix. Banning half turns like <code>F2</code> strictly prevents equivalent consecutive or commuting workarounds such as <code>F F</code>, <code>F' F'</code>, or <code>F B F</code>.</li>
+  <li><strong>Rotations &amp; Advanced Settings</strong>: Enabling rotations reveals the Max Rotations limit. Expand <em>Search Settings</em> for turn angles, depth range, result/time/node budgets, Modulo U, pruning strength, and free-rotation quotient.</li>
+  <li><strong>Native MCC Fingertrick Sorting</strong>: Built-in C++20 implementation of Trangium's MCC scoring model. Sort live by <strong>Search Order</strong>, <strong>Moves → MCC</strong>, or <strong>MCC → Moves</strong>, and tune all 10 parameters plus <strong>Strip pre-AUF (leading U)</strong> in <em>MCC Settings…</em>.</li>
+</ul>
+</section>
+
+<section id="search"><h2>Performance Profiles &amp; Resource Safety</h2>
+<p>Choose a concurrency profile under <em>Options → Performance</em>:</p>
+<ul>
+  <li><strong>Quiet (~50% cores)</strong>: Minimal fan noise and background load.</li>
+  <li><strong>Balanced (Default)</strong>: Leaves 1–2 logical cores free and lowers background solver thread priority so the desktop stays responsive.</li>
+  <li><strong>Full Speed (All cores)</strong>: Uses all CPU cores for maximum throughput on deep optimal or formula searches.</li>
+</ul>
+<p>Pruning cache budgets automatically adapt to available system RAM, and every single output maneuver is independently verified by a 54-sticker geometric facelet simulator before display.</p>
+</section>
+
+<section id="mcp"><h2>AI / MCP Batch Integration</h2>
+<p><code>mcp/CubeExplorerMcp.exe</code> exposes a local stdio MCP server backed by <code>CubeExplorerEngine.exe</code> with no external API key required. Pre-populated paths are included in <code>mcp-config.json</code>, providing <code>get_capabilities</code>, <code>validate_cube</code>, <code>apply_moves</code>, <code>submit_solve</code>, <code>validate_templates</code>, <code>submit_templates</code>, <code>get_job</code>, <code>get_results</code>, and <code>cancel_job</code>. See <a href="../docs/MCP.md">MCP Documentation</a> for the full schema.</p>
+</section>
+
+<section id="algorithm"><h2>Core Source Guide</h2>
+<p>Complete source code is distributed in <code>corresponding-source.zip</code> under GPL-3.0:</p>
+<table>
+  <tr><th>Files</th><th>Focus</th></tr>
+  <tr><td><code>include/cube/model.hpp</code> / <code>src/core/model.cpp</code></td><td>Cubie model, 24 reference frames, wide/slice transforms, flexible parser &amp; independent facelet replay</td></tr>
+  <tr><td><code>src/core/twophase.cpp</code> / <code>src/core/optimal.cpp</code></td><td>Two-Phase solver, triple-axis search, coordinate IDA* optimal solver &amp; exact 8-corner table</td></tr>
+  <tr><td><code>src/core/pattern.cpp</code> / <code>src/core/mcc.cpp</code></td><td>Formula solver with O(1) incremental PDB cursors, ban-safe pruning &amp; native MCC engine</td></tr>
+  <tr><td><code>src/app/main_window.hpp</code> / <code>formula_window.cpp</code> / <code>xcross_dialog.hpp</code></td><td>Qt 6 GUI, view-synced thumbnails, bilingual UI, themes, custom shortcuts &amp; Cross Quick Solver</td></tr>
+</table>
+<p>Technical documentation: <a href="../docs/UI-MIGRATION.md">UI Migration</a> · <a href="../docs/twophase-migration.md">Two-Phase Notes</a> · <a href="../docs/pattern-migration.md">Formula &amp; Pruning Proofs</a> · <a href="../docs/template-migration.md">Template Migration</a> · <a href="../docs/CORE-VALIDATION.md">Core Validation Report</a>.</p>
+</section>
+
+<section id="limits"><h2>License &amp; Attribution</h2>
+<p>Built on Herbert Kociemba's original Cube Explorer 5.15 (GPL-3.0) and re-architected in C++20 / Qt 6. Bundled Qt 6 and third-party notices are included; see <a href="https://doc.qt.io/qt-6/licensing.html">Qt Licensing</a>, <a href="../NOTICE.txt">NOTICE.txt</a>, and <a href="../LICENSE">GPL-3.0 LICENSE</a>.</p>
+</section>
+<footer>Offline User Guide · Cube Explorer - Modern version · Created by 云起Arrebol</footer>
+</main></html>

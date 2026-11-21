@@ -11,9 +11,11 @@
 #include "ui_i18n.hpp"
 #include "ui_icons.hpp"
 #include "xcross_dialog.hpp"
+#include <QKeySequenceEdit>
 #include <QPrintDialog>
 #include <QPageSetupDialog>
 #include <QPrinter>
+#include <QShortcut>
 #include <QTextDocument>
 #include <QScopeGuard>
 #include <set>
@@ -72,6 +74,7 @@ class MainWindow final : public QMainWindow {
                                      QColor("#808080")};
     char brush_ = 'U';
     bool dark_ = false, english_ = false, closing_ = false;
+    int currentView_ = 0;
     bool dirty_ = false;
     bool loading_ = false, cancelLoad_ = false;
     QSettings preferences_;
@@ -99,6 +102,17 @@ class MainWindow final : public QMainWindow {
         const char *en;
     };
     std::vector<BilingualAction> menuTexts_;
+    struct ShortcutBinding {
+        QString id;
+        const char *zh;
+        const char *en;
+        QKeySequence defaultKey;
+        QKeySequence currentKey;
+        std::function<void()> trigger;
+        QShortcut *primary = nullptr;
+        QShortcut *alt = nullptr;
+    };
+    std::vector<ShortcutBinding> shortcuts_;
     QMenu *fileMenu_ = nullptr, *editMenu_ = nullptr, *runMenu_ = nullptr, *optionsMenu_ = nullptr,
           *helpMenu_ = nullptr, *viewsMenu_ = nullptr, *perfMenu_ = nullptr;
     QAction *nightAction_ = nullptr;
@@ -363,9 +377,16 @@ class MainWindow final : public QMainWindow {
                 trUi("应用输入公式的逆公式（便于快速还原或设置 Setup）",
                      "Apply the inverse of the entered formula (handy for setup/undo)"));
         }
-        if (formulaInput_)
+        if (formulaInput_) {
+            const auto hint = shortcutHintText("apply_formula");
             formulaInput_->setPlaceholderText(
-                trUi("例如：R U R' U'（回车应用）", "e.g. R U R' U' (Enter to apply)"));
+                hint.isEmpty()
+                    ? trUi("例如：R U R' U' 或 RUR'U'（回车应用）", "e.g. R U R' U' or RUR'U' (Enter to apply)")
+                    : trUi("例如：R U R' U' 或 RUR'U'（回车 / %1 应用）",
+                           "e.g. R U R' U' or RUR'U' (Enter / %1)")
+                          .arg(hint));
+        }
+        refreshShortcutHints();
         const std::array<QString, 3> resetNames = {trUi("空白", "Empty"), trUi("复原", "Clean"),
                                                    trUi("随机", "Random")};
         const QString cornerShort = trUi("角", "C");
@@ -447,6 +468,198 @@ class MainWindow final : public QMainWindow {
             formulaPanel_->refreshAppearance();
         preferences_.setValue("Appearance/Dark", dark_);
         refresh();
+    }
+    static QKeySequence alternateEnterSequence(const QKeySequence &seq) {
+        if (seq.count() != 1)
+            return {};
+        const QKeyCombination combo = seq[0];
+        if (combo.key() == Qt::Key_Return)
+            return QKeySequence(QKeyCombination(combo.keyboardModifiers(), Qt::Key_Enter));
+        if (combo.key() == Qt::Key_Enter)
+            return QKeySequence(QKeyCombination(combo.keyboardModifiers(), Qt::Key_Return));
+        return {};
+    }
+    QString shortcutHintText(const QString &id) const {
+        for (const auto &binding : shortcuts_)
+            if (binding.id == id && !binding.currentKey.isEmpty())
+                return binding.currentKey.toString(QKeySequence::NativeText).replace("Return", "Enter");
+        return {};
+    }
+    QString shortcutHintSuffix(const QString &id) const {
+        const auto text = shortcutHintText(id);
+        return text.isEmpty() ? QString{} : QString(" (%1)").arg(text);
+    }
+    void refreshShortcutHints() {
+        if (applyButton_)
+            applyButton_->setToolTip(trUi("应用输入公式", "Apply entered formula") +
+                                     shortcutHintSuffix("apply_formula"));
+        if (inverseButton_)
+            inverseButton_->setToolTip(
+                trUi("应用输入公式的逆公式（便于快速还原或设置 Setup）",
+                     "Apply the inverse of the entered formula (handy for setup/undo)") +
+                shortcutHintSuffix("apply_inverse"));
+        if (solve_)
+            solve_->setToolTip(trUi("求解当前魔方", "Solve current cube") + shortcutHintSuffix("solve_cube"));
+        if (generate_)
+            generate_->setToolTip(trUi("生成当前魔方", "Generate current cube") +
+                                  shortcutHintSuffix("generate_cube"));
+        if (presetXCross_)
+            presetXCross_->setToolTip(
+                trUi("支持选择任意底色与任意 F2L 槽位（Cross / XC / XXC / XXXC）快速求解",
+                     "Quick Cross / XC / XXC / XXXC solver with selectable bottom color and F2L slots") +
+                shortcutHintSuffix("xcross_solver"));
+    }
+    void applyShortcutKey(ShortcutBinding &binding, const QKeySequence &seq, bool persist) {
+        binding.currentKey = seq;
+        if (binding.primary)
+            binding.primary->setKey(seq);
+        if (binding.alt)
+            binding.alt->setKey(alternateEnterSequence(seq));
+        if (persist)
+            preferences_.setValue("Shortcuts/" + binding.id, seq.toString(QKeySequence::PortableText));
+    }
+    void setupShortcuts() {
+        auto addBinding = [this](const char *id, const char *zh, const char *en, QKeySequence defaultKey,
+                                 std::function<void()> trigger) {
+            ShortcutBinding binding;
+            binding.id = QString::fromLatin1(id);
+            binding.zh = zh;
+            binding.en = en;
+            binding.defaultKey = std::move(defaultKey);
+            binding.trigger = std::move(trigger);
+            const QString prefKey = "Shortcuts/" + binding.id;
+            if (preferences_.contains(prefKey))
+                binding.currentKey = QKeySequence::fromString(preferences_.value(prefKey).toString(),
+                                                              QKeySequence::PortableText);
+            else
+                binding.currentKey = binding.defaultKey;
+            binding.primary = new QShortcut(binding.currentKey, this);
+            binding.primary->setContext(Qt::WindowShortcut);
+            binding.alt = new QShortcut(alternateEnterSequence(binding.currentKey), this);
+            binding.alt->setContext(Qt::WindowShortcut);
+            const std::size_t index = shortcuts_.size();
+            auto fire = [this, index] {
+                if (index < shortcuts_.size() && shortcuts_[index].trigger)
+                    shortcuts_[index].trigger();
+            };
+            connect(binding.primary, &QShortcut::activated, this, fire);
+            connect(binding.alt, &QShortcut::activated, this, fire);
+            shortcuts_.push_back(std::move(binding));
+        };
+        addBinding("apply_formula", "应用当前公式", "Apply Formula", QKeySequence(Qt::CTRL | Qt::Key_Return),
+                   [this] {
+                       try {
+                           applyFormula(formulaInput_->text());
+                       } catch (const std::exception &e) {
+                           warn(friendlyError(e.what()));
+                       }
+                   });
+        addBinding("apply_inverse", "应用当前公式的逆", "Apply Inverse Formula",
+                   QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_Return), [this] {
+                       try {
+                           applyInverseFormula(formulaInput_->text());
+                       } catch (const std::exception &e) {
+                           warn(friendlyError(e.what()));
+                       }
+                   });
+        addBinding("solve_cube", "求解当前情况", "Solve Current Cube", QKeySequence(Qt::Key_F5),
+                   [this] { chooseMode(false); });
+        addBinding("generate_cube", "生成当前情况", "Generate Current Cube", QKeySequence(Qt::Key_F6),
+                   [this] { chooseMode(true); });
+        addBinding("xcross_solver", "Cross 快速求解", "Cross Quick Solver",
+                   QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_X), [this] { openXCrossDialog(); });
+        addBinding("cycle_view", "切换魔方显示视图（经典 / 2D / 3D）", "Cycle Cube View (Classic / 2D / 3D)",
+                   QKeySequence(Qt::Key_F2), [this] { setView((currentView_ + 1) % 3); });
+        addBinding("toggle_dark", "切换白天 / 夜晚模式", "Toggle Dark / Light Mode",
+                   QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_D), [this] { changeAppearance(!dark_); });
+        addBinding("toggle_lang", "切换中 / 英文界面", "Toggle Chinese / English UI",
+                   QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_L), [this] { setLanguage(!english_); });
+        addBinding("reset_clean", "重置为复原状态", "Reset to Solved", QKeySequence(Qt::CTRL | Qt::Key_R),
+                   [this] { resetEditor(editor::Reset::Clean); });
+        addBinding("reset_random", "随机打乱魔方", "Random Scramble",
+                   QKeySequence(Qt::CTRL | Qt::SHIFT | Qt::Key_R),
+                   [this] { resetEditor(editor::Reset::Random); });
+        addBinding("focus_formula", "聚焦公式输入框", "Focus Formula Input", QKeySequence(Qt::CTRL | Qt::Key_L),
+                   [this] {
+                       formulaInput_->setFocus(Qt::ShortcutFocusReason);
+                       formulaInput_->selectAll();
+                   });
+    }
+    void shortcutsDialog() {
+        QDialog dialog(this);
+        dialog.setObjectName("shortcutsDialog");
+        dialog.setWindowTitle(trUi("快捷键设置", "Keyboard Shortcuts"));
+        dialog.setMinimumWidth(qRound(470 * uiScale_));
+        auto *layout = new QVBoxLayout(&dialog);
+        auto *tip = new QLabel(
+            trUi("点击右侧输入框并直接按下组合键即可修改（例如 Ctrl+Enter 应用公式）；支持主回车与小键盘回车。",
+                 "Click any box and press a key combination to rebind (e.g. Ctrl+Enter to apply formula)."));
+        tip->setWordWrap(true);
+        layout->addWidget(tip);
+        auto *form = new QFormLayout;
+        form->setFieldGrowthPolicy(QFormLayout::AllNonFixedFieldsGrow);
+        std::vector<QKeySequenceEdit *> edits;
+        edits.reserve(shortcuts_.size());
+        for (const auto &binding : shortcuts_) {
+            auto *rowWidget = new QWidget;
+            auto *rowLayout = new QHBoxLayout(rowWidget);
+            rowLayout->setContentsMargins(0, 0, 0, 0);
+            rowLayout->setSpacing(6);
+            auto *edit = new QKeySequenceEdit(binding.currentKey);
+            edit->setObjectName("shortcutEdit_" + binding.id);
+            edit->setMaximumSequenceLength(1);
+            edit->setMinimumWidth(qRound(150 * uiScale_));
+            auto *clearBtn = new QPushButton(trUi("清除", "Clear"));
+            clearBtn->setAutoDefault(false);
+            clearBtn->setCursor(Qt::PointingHandCursor);
+            connect(clearBtn, &QPushButton::clicked, edit, &QKeySequenceEdit::clear);
+            rowLayout->addWidget(edit, 1);
+            rowLayout->addWidget(clearBtn);
+            form->addRow(trUi(binding.zh, binding.en), rowWidget);
+            edits.push_back(edit);
+        }
+        layout->addLayout(form);
+        auto *bottom = new QHBoxLayout;
+        auto *resetBtn = new QPushButton(trUi("恢复默认", "Reset Defaults"));
+        resetBtn->setAutoDefault(false);
+        resetBtn->setCursor(Qt::PointingHandCursor);
+        connect(resetBtn, &QPushButton::clicked, &dialog, [&] {
+            for (std::size_t i = 0; i < shortcuts_.size(); ++i)
+                edits[i]->setKeySequence(shortcuts_[i].defaultKey);
+        });
+        auto *buttons = new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
+        bottom->addWidget(resetBtn);
+        bottom->addStretch();
+        bottom->addWidget(buttons);
+        layout->addLayout(bottom);
+        connect(buttons, &QDialogButtonBox::accepted, &dialog, [&] {
+            for (std::size_t i = 0; i < edits.size(); ++i) {
+                const auto a = edits[i]->keySequence();
+                if (a.isEmpty())
+                    continue;
+                for (std::size_t j = i + 1; j < edits.size(); ++j) {
+                    const auto b = edits[j]->keySequence();
+                    if (!b.isEmpty() && (a == b || alternateEnterSequence(a) == b)) {
+                        QMessageBox::warning(
+                            &dialog, trUi("快捷键冲突", "Shortcut Conflict"),
+                            trUi("“%1”与“%2”使用了相同的快捷键 %3，请修改后再保存。",
+                                 "\"%1\" and \"%2\" share the same shortcut (%3). Please choose distinct keys.")
+                                .arg(trUi(shortcuts_[i].zh, shortcuts_[i].en))
+                                .arg(trUi(shortcuts_[j].zh, shortcuts_[j].en))
+                                .arg(a.toString(QKeySequence::NativeText)));
+                        return;
+                    }
+                }
+            }
+            dialog.accept();
+        });
+        connect(buttons, &QDialogButtonBox::rejected, &dialog, &QDialog::reject);
+        if (dialog.exec() == QDialog::Accepted) {
+            for (std::size_t i = 0; i < shortcuts_.size(); ++i)
+                applyShortcutKey(shortcuts_[i], edits[i]->keySequence(), true);
+            preferences_.sync();
+            retranslateUi();
+        }
     }
     void customColor() {
         const auto index = face_names.find(brush_);
@@ -540,6 +753,7 @@ class MainWindow final : public QMainWindow {
         rows_.push_back(row);
         row->setNumber(static_cast<int>(rows_.size()));
         row->setAppearance(dark_, colors_);
+        row->setViewMode(currentView_);
         row->setUiScale(uiScale_);
         row->onSelect = [this](ResultRow *row, Qt::KeyboardModifiers mods) { selectRow(row, mods); };
         row->onContext = [this](ResultRow *row, QPoint position) { rowMenu(row, position); };
@@ -1206,6 +1420,9 @@ class MainWindow final : public QMainWindow {
         }
         viewActions_[0]->setChecked(true);
         action(optionsMenu_, "自定义选中颜色…", "Customize Active Color…", [this] { customColor(); });
+        auto *shortcutsAction =
+            action(optionsMenu_, "快捷键设置…", "Keyboard Shortcuts…", [this] { shortcutsDialog(); });
+        shortcutsAction->setObjectName("shortcutsMenuAction");
         action(optionsMenu_, "收起主窗口结果区", "Collapse Results Pane", [this] { hideLeft(); });
         action(optionsMenu_, "MCP 接口配置", "MCP Configuration", [this] {
             const auto path = baseDirectory() + "/mcp-config.json";
@@ -1216,13 +1433,7 @@ class MainWindow final : public QMainWindow {
         helpMenu_ = menuBar()->addMenu(trUi("帮助(&H)", "Help(&H)"));
         action(
             helpMenu_, "使用说明", "Help Contents",
-            [this] {
-                const auto installed = baseDirectory() + "/help/index.html";
-                QDesktopServices::openUrl(
-                    QUrl::fromLocalFile(QFileInfo::exists(installed)
-                                            ? installed
-                                            : QString::fromUtf8(CUBE_PROJECT_ROOT) + "/help/index.html"));
-            },
+            [this] { QDesktopServices::openUrl(QUrl::fromLocalFile(helpFilePath())); },
             QKeySequence::HelpContents);
         action(helpMenu_, "关于", "About", [this] {
             QMessageBox::about(
@@ -1386,8 +1597,12 @@ class MainWindow final : public QMainWindow {
             editSticker(index, button, mods);
         };
         editorView_->onViewChanged = [this](int view) {
-            if (view >= 0 && view < static_cast<int>(viewActions_.size()))
-                viewActions_[view]->setChecked(true);
+            currentView_ = std::clamp(view, 0, 2);
+            if (currentView_ >= 0 && currentView_ < static_cast<int>(viewActions_.size()))
+                viewActions_[currentView_]->setChecked(true);
+            preferences_.setValue("Appearance/View", currentView_);
+            for (auto *row : rows_)
+                row->setViewMode(currentView_);
         };
         layout->addWidget(editorView_);
 
@@ -1521,6 +1736,9 @@ class MainWindow final : public QMainWindow {
         statusBar()->hide();
         connect(&replayTimer_, &QTimer::timeout, this, [this] { replayStep(); });
         connect(&autorunTimer_, &QTimer::timeout, this, [this] { autorunTick(); });
+        setupShortcuts();
+        const int savedView = std::clamp(preferences_.value("Appearance/View", 0).toInt(), 0, 2);
+        setView(savedView);
         retranslateUi();
         changeAppearance(dark_);
         updateScale(true);
@@ -2033,8 +2251,40 @@ class MainWindow final : public QMainWindow {
         editorView_->setAutoFix(value);
     }
     void setView(int index) {
-        editorView_->setView(index);
-        viewActions_.at(index)->setChecked(true);
+        currentView_ = std::clamp(index, 0, 2);
+        editorView_->setView(currentView_);
+        viewActions_.at(currentView_)->setChecked(true);
+        preferences_.setValue("Appearance/View", currentView_);
+        for (auto *row : rows_)
+            row->setViewMode(currentView_);
+    }
+    int currentView() const {
+        return currentView_;
+    }
+    QString helpFilePath() const {
+        const QString rel = english_ ? "/help/index.en.html" : "/help/index.html";
+        const QString installed = baseDirectory() + rel;
+        if (QFileInfo::exists(installed))
+            return installed;
+        const QString source = QString::fromUtf8(CUBE_PROJECT_ROOT) + rel;
+        if (QFileInfo::exists(source))
+            return source;
+        const QString fallback = baseDirectory() + "/help/index.html";
+        return QFileInfo::exists(fallback) ? fallback : QString::fromUtf8(CUBE_PROJECT_ROOT) + "/help/index.html";
+    }
+    QKeySequence shortcutFor(const QString &id) const {
+        for (const auto &binding : shortcuts_)
+            if (binding.id == id)
+                return binding.currentKey;
+        return {};
+    }
+    void setShortcutFor(const QString &id, const QKeySequence &seq) {
+        for (auto &binding : shortcuts_)
+            if (binding.id == id) {
+                applyShortcutKey(binding, seq, true);
+                retranslateUi();
+                return;
+            }
     }
     const std::vector<ResultRow *> &rows() const {
         return rows_;

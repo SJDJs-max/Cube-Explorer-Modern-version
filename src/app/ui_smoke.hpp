@@ -586,6 +586,38 @@ inline void runUiSmoke(MainWindow &window, QApplication &app, const QString &scr
                                       apply_pattern(data->start, data->moves) == data->terminal,
                                   "Original five-scramble action must contain actual verified generators");
                         }
+                        // Verify 4 new UX upgrades: synced help language, synced result-row views,
+                        // spaceless/R'2 formula parsing, and customizable shortcuts.
+                        check(window.helpFilePath().endsWith("/help/index.html"),
+                              "Chinese UI must resolve help/index.html");
+                        window.setEnglish(true);
+                        check(window.helpFilePath().endsWith("/help/index.en.html"),
+                              "English UI must resolve help/index.en.html");
+                        window.setEnglish(false);
+                        window.setView(1);
+                        check(!window.rows().empty() &&
+                                  window.rows().front()->thumbnail()->view() == CubeCanvas::View::Net2D,
+                              "Left result rows must follow 2D Net main view");
+                        window.setView(2);
+                        check(window.rows().front()->thumbnail()->view() == CubeCanvas::View::Cube3D,
+                              "Left result rows must follow 3D Cube main view");
+                        auto *addedIn3d = window.addOrdinary(pattern_from_cube(CubeState{}), false);
+                        check(addedIn3d->thumbnail()->view() == CubeCanvas::View::Cube3D,
+                              "Newly added result rows must inherit active view mode");
+                        window.setView(0);
+                        window.restore(pattern_from_cube(CubeState{}));
+                        window.applyFormula("RUR'U'R'2");
+                        check(window.rawFacelets() ==
+                                  format_facelets(to_facelets(cube::apply(CubeState{}, parse_moves("R U R' U' R2")))),
+                              "Main window formula input must parse spaceless and R'2 notation");
+                        check(window.findChild<QAction *>("shortcutsMenuAction") != nullptr,
+                              "Keyboard shortcuts menu action missing");
+                        check(window.shortcutFor("apply_formula") == QKeySequence(Qt::CTRL | Qt::Key_Return),
+                              "Default Ctrl+Enter shortcut for apply_formula missing");
+                        window.setShortcutFor("apply_formula", QKeySequence(Qt::CTRL | Qt::Key_E));
+                        check(window.shortcutFor("apply_formula") == QKeySequence(Qt::CTRL | Qt::Key_E),
+                              "Custom shortcut update failed");
+                        window.setShortcutFor("apply_formula", QKeySequence(Qt::CTRL | Qt::Key_Return));
                         timer->stop();
                         if (!log.isEmpty()) {
                             QFile file(log);

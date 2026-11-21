@@ -29,16 +29,20 @@ class HelpLinks(HTMLParser):
         if tag == "a" and "href" in attributes:
             self.links.append(attributes["href"])
 
-help_file = release / "help/index.html"
-parser = HelpLinks()
-parser.feed(help_file.read_text(encoding="utf-8"))
-for link in parser.links:
-    url = urlsplit(link)
-    if not url.scheme:
-        if url.path:
-            assert (help_file.parent / unquote(url.path)).exists(), link
-        elif url.fragment:
-            assert url.fragment in parser.ids, link
+help_links_checked = 0
+for help_name in ("help/index.html", "help/index.en.html"):
+    help_file = release / help_name
+    assert help_file.exists(), help_name
+    parser = HelpLinks()
+    parser.feed(help_file.read_text(encoding="utf-8"))
+    for link in parser.links:
+        url = urlsplit(link)
+        if not url.scheme:
+            if url.path:
+                assert (help_file.parent / unquote(url.path)).exists(), f"{help_name}: {link}"
+            elif url.fragment:
+                assert url.fragment in parser.ids, f"{help_name}: {link}"
+    help_links_checked += len(parser.links)
 
 for file in (release / "corresponding-source.zip", root / "dist/CubeExplorerModern-win64.zip"):
     with zipfile.ZipFile(file) as archive:
@@ -56,4 +60,4 @@ archive = root / "dist/CubeExplorerModern-win64.zip"
 with archive.open("rb") as stream:
     archive_digest = hashlib.file_digest(stream, "sha256").hexdigest()
 assert archive.with_suffix(".zip.sha256").read_text().split()[0] == archive_digest
-print(json.dumps({"status": "PASS", "manifest_files": len(manifest), "help_links": len(parser.links), "zip_crc": "PASS", "archive_sha256": archive_digest}))
+print(json.dumps({"status": "PASS", "manifest_files": len(manifest), "help_links": help_links_checked, "zip_crc": "PASS", "archive_sha256": archive_digest}))

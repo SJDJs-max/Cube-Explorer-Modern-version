@@ -76,13 +76,18 @@ void notation_and_costs() {
     require(format_moves(parse_moves("U2 r x'"),true)=="[U2] r x'","Initial U must receive brackets without changes");
     require(format_moves(parse_moves("Rw2 (R U)2 [U']"))=="r2 R U R U U'","Parser failed wide aliases, groups or brackets");
     require(format_moves(parse_moves("(R U)'"))=="U' R'","Grouped inverse failed");
+    require(format_moves(parse_moves("(R U)'2"))=="U' R' U' R'","Prime-before-repeat grouped inverse failed");
+    require(parse_moves("RUR'U'")==parse_moves("R U R' U'"),"Spaceless formula must match spaced formula");
+    require(parse_moves("rUR'U'r'FRF'")==parse_moves("r U R' U' r' F R F'"),"Spaceless wide formula failed");
+    require(parse_moves("R'2 r'2 Rw'2 RW'2 M'2 x'2")==parse_moves("R2 r2 r2 r2 M2 x2"),"Prime-2 half turn notation must equal 2");
+    require(parse_moves("R\xE2\x80\x99U\xE2\x80\xB2R\xC2\xB2")==parse_moves("R' U' R2"),"Unicode prime/superscript normalization failed");
     require(parse_moves("// no moves\n").empty(),"Comments must not be actions");
     const auto moves=parse_moves("Rw2 x y' [U] (R U R' U')2 // comment");
     require(turn_count(moves)==10,"Turn cost must count half/wide turns once");
     require(rotation_count(moves)==2,"Rotations must be counted separately");
     require(turn_count(moves)+rotation_count(moves)==static_cast<int>(moves.size()),"Every action must be accounted for");
     require(cube::apply(cube::apply(CubeState{},moves),inverse(moves))==CubeState{},"Formula inverse must undo rotations as well as face turns");
-    for(std::string_view bad:{"Q","R0","R22","(R U","R]","((R)0x)999999999"})
+    for(std::string_view bad:{"Q","R0","R22","R''","R'3","(R U","R]","((R)0x)999999999"})
         require_rejected([&]{(void)parse_moves(bad);},"Invalid notation was silently accepted: "+std::string(bad));
 }
 void input_validation() {

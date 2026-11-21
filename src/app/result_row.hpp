@@ -416,6 +416,17 @@ class ResultRow final : public QFrame {
         thumbnail_->setDarkMode(dark);
         thumbnail_->setColors(colors);
     }
+    void setViewMode(CubeCanvas::View view) {
+        thumbnail_->setView(view);
+        thumbnail_->setDrawingMargin(view == CubeCanvas::View::Classic ? 0 : 3);
+        update();
+    }
+    void setViewMode(int index) {
+        const auto view = index == 1 ? CubeCanvas::View::Net2D
+                        : index == 2 ? CubeCanvas::View::Cube3D
+                                     : CubeCanvas::View::Classic;
+        setViewMode(view);
+    }
     void setFormulaResult(ResultData data) {
         ordinary_ = std::move(data);
         setStatus(QString("已验证 · %1 步").arg(ordinary_->turns));
