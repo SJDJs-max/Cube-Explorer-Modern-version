@@ -1,0 +1,5 @@
+add_executable(CubeExplorerEngine main.cpp)
+target_link_libraries(CubeExplorerEngine PRIVATE cube_core Qt6::Core)
+if(MINGW)
+  target_compile_options(CubeExplorerEngine PRIVATE -Wall -Wextra -Wpedantic)
+endif()

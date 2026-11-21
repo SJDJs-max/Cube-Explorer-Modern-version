@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cube Explorer Modern · 使用与算法说明</title>
+<style>
+:root{color-scheme:light;--ink:#203849;--muted:#657887;--teal:#167c79;--line:#dbe5eb}*{box-sizing:border-box}body{margin:0;background:#f3f6f9;color:var(--ink);font:16px/1.8 Calibri,"Microsoft YaHei",system-ui,sans-serif}header{padding:44px max(24px,calc((100vw - 1080px)/2));background:#203849;color:white}header p{color:#c3d9df}h1{font-size:32px;margin:0}h2{font-size:25px;margin:0 0 18px;scroll-margin-top:20px}h3{font-size:18px;margin-top:28px}main{max-width:1128px;margin:24px auto;padding:0 24px}section{background:white;border:1px solid var(--line);border-radius:14px;padding:30px;margin:22px 0}nav{display:flex;flex-wrap:wrap;gap:12px 22px}a{color:var(--teal)}code,pre{font-family:Calibri,"Microsoft YaHei",sans-serif}code{background:#edf3f6;padding:2px 5px;border-radius:4px}pre{padding:18px;background:#edf3f6;overflow:auto;font-size:14px;line-height:1.6}table{border-collapse:collapse;width:100%;font-size:14px}th,td{border-bottom:1px solid var(--line);text-align:left;padding:11px;vertical-align:top}th{background:#f4f8fa}.note{border-left:4px solid var(--teal);padding:12px 18px;background:#eef8f6}.muted{color:var(--muted)}li{margin:7px 0}footer{padding:24px 0 45px;color:var(--muted)}@media(max-width:700px){main{padding:0 12px}section{padding:20px}h1{font-size:26px}table{display:block;overflow:auto}}
+</style>
+<header><h1>Cube Explorer Modern</h1><p>中文使用帮助 · 核心算法学习 · MCP 批量求解</p><small>Windows x64 · C++20 / Qt · 0.3.2</small></header>
+<main>
+<nav><a href="#start">开始使用</a><a href="#views">视图与主题</a><a href="#input">原版操作</a><a href="#results">结果与最优</a><a href="#files">保存与加载</a><a href="#formula">公式规则</a><a href="#search">搜索控制</a><a href="#mcp">AI / MCP</a><a href="#algorithm">算法导读</a><a href="#limits">范围</a></nav>
+<section id="start"><h2>开始使用</h2>
+<p>双击 <code>dist/CubeExplorerModern-0.3.2/CubeExplorerModern.exe</code>。保留整个交付文件夹；程序随附 Qt、运行库和剪枝数据，无需另外安装 Delphi、Python 或 Qt，求解在本机进行。文件与窗口图标沿用原版 <code>rubik.ico</code>，原样嵌入程序。</p>
+<p>初次打开时左侧隐藏，右侧只保留原式贴纸编辑器，不再显示编辑器页签。经典、2D、3D 和并排视图共用右下方的大画笔色块，左下方是“自动修正”，下方控制面板左列“选择”、中列“转动”、右列“重置”；随后是公式输入与“应用”；颜色选择位于“选项 → 自定义选中颜色”。主窗口左侧展开后是一个共同的结果列表，常规结果和添加进来的公式结果列在一起。</p>
+<p>主窗口默认收起为 510×730，展开为 1120×730，并在当前屏幕可用区域居中；公式输入下方没有多余的大块空白。尺寸按逻辑像素计算，屏幕缩放由 Windows / Qt 处理。</p>
+<ol><li>点击一个中心贴纸取得画笔色，再编辑其他贴纸；也可在“输入公式”框输入转动并按 Enter 或点击“应用”。</li><li>点击“求解当前情况”或“生成当前情况”。完整普通魔方显示方式选择框；有未知块、特殊标记或中心方向约束时直接进入方式二。</li><li>方式一展开左侧常规结果行并开始二阶段搜索。方式二弹出独立“公式窗口”，保持未开始状态，设置好参数后点击“开始搜索”。打开公式窗口不会展开主窗口左侧。</li><li>方式二的结果先保留在公式窗口；点击“将解添加到主窗口”才复制结果并展开左侧。输入固定为打开公式窗口时的图案，随后编辑主窗口不会改写该输入。</li></ol>
+<table><tr><th>方式</th><th>适用任务</th><th>目标与计步</th></tr><tr><td>方法一 · 常规求解</td><td>完整普通三阶，快速寻找复原公式；每条结果可另选“最优”搜索</td><td>18 种外层动作，精确复原，半转也算一步</td></tr><tr><td>方法二 · 公式求解</td><td>完整或不完整图案，枚举指定动作集合中的公式</td><td>默认模 U；外层、宽转、中层各计一步，整体旋转不计步，不单列次数</td></tr></table>
+</section>
+<section id="views"><h2>视图与白天 / 夜晚模式</h2>
+<p>在“选项 → 魔方显示”切换“经典展开”“2D 展开”“3D 魔方”“2D + 3D”。经典展开延续原版的展开与斜面组合，画笔色和自动修正控件位于原图的空白区；2D 使用等比例正方形贴纸；3D 使用统一透视相机绘制真实立方体，具有独立块体、倒角和柔和明暗。默认观察角度参考指定项目的 3D 示例，六面共用同一比例。2D + 3D 两幅视图同步更新，点击任一视图都编辑对应的真实贴纸。</p>
+<p>3D 视图中，不带修饰键的左键拖动调整观察角度，滚轮缩放；单击仍执行原版染色或中心取色。拖动相机只改变观察视角，不增加公式动作或步数。</p>
+<p>点击菜单栏右上角月亮 / 太阳按钮，或在“选项”中切换“夜晚模式”。拖动窗口边框时，魔方、字体与控制面板会等比例缩放。主题不会改变魔方颜色、公式或搜索状态。主题、选中颜色的自定义值和 AutoFix 选择保存在交付目录的 <code>data/preferences.ini</code>。</p>
+<p>默认白顶、绿前、红右，URFDLB 配色依次为 U 白（255,255,255）、R 红（238,0,0）、F 绿（0,216,0）、D 黄（254,254,0）、L 橙（255,161,0）、B 蓝（0,0,242）。3D 的明暗只影响显示，不改变这些颜色值或魔方状态。自动修正默认开启，与原版窗体缺省设置一致，之后保留您的选择。要改某种颜色，先点击该颜色中心取色，再打开“选项 → 自定义选中颜色”。</p>
+</section>
+<section id="input"><h2>原版鼠标、修饰键与控制面板</h2>
+<table><tr><th>手势</th><th>行为</th></tr>
+<tr><td>非中心贴纸左键</td><td>用当前选中颜色填入这个贴纸。</td></tr>
+<tr><td>Shift + 左键</td><td>用当前选中颜色的黑底交叉斜线标记“忽略块朝向”。Shift 与 Ctrl 同时按下时，Shift 优先。</td></tr>
+<tr><td>Ctrl + 左键</td><td>写入黑底 U 色单向斜线的“仅朝向”标记，不指定块身份；纹理与原版一致。</td></tr>
+<tr><td>非中心贴纸右键或中键</td><td>只清空被点的一个贴纸。不会擅自清空整个角块或棱块。</td></tr>
+<tr><td>中心贴纸左键</td><td>取色；当前画笔色方块同步显示该颜色。</td></tr>
+<tr><td>中心贴纸右键或中键</td><td>启用中心方向约束时打开中心方向编辑；未启用时不改变中心。</td></tr>
+</table>
+<h3>自动修正</h3><p>勾选“自动修正”后，左键染色会执行原版规则：传播同块的忽略朝向标记、为仅朝向标记清除其余贴纸、补全可确定的角块第三色、处理不可能的配色和重复块，并在条件允许时纠正总朝向或置换奇偶。右键清空单贴纸不触发自动修正。</p>
+<p>关闭自动修正时允许保留尚未画完或暂时不合法的状态，转动按钮仍能真实搬动这些贴纸。点击求解或生成时，无论开关是否勾选，都执行原版提交检查；若检查修正了输入，先显示修正后的魔方并暂停本次提交，请检查后再次点击。</p>
+<h3>转动与重置</h3><pre>R  U  F
+L  D  B
+r  u  f
+l  d  b
+M  E  S
+x  y  z</pre>
+<p>转动按钮左键正转 90°；右键按下时临时显示撇号，松开执行逆转。Ctrl、Shift 不会把转动按钮变成另一种动作。半转可连按两次，或输入 <code>R2</code>、<code>r2</code>。</p>
+<table><tr><th>重置行</th><th>主按钮</th><th>角 / 棱按钮</th></tr><tr><td>空白</td><td>清空全部非中心贴纸</td><td>只清空所选类别，保留另一类</td></tr><tr><td>复原</td><td>恢复全部贴纸</td><td>只复原所选类别，保留另一类</td></tr><tr><td>随机</td><td>生成合法随机角棱坐标</td><td>随机角时把棱复原；随机棱时把角复原，沿用原版行为</td></tr></table>
+<table><tr><th>公式输入</th><th>含义</th><th>例子</th></tr><tr><td><code>U R F D L B</code></td><td>上、右、前、下、左、后外层</td><td><code>R U R' U'</code></td></tr><tr><td><code>u r f d l b</code></td><td>对应外层连同相邻中层一起转的宽转</td><td><code>r U r' U'</code></td></tr><tr><td><code>M E S</code></td><td>中层，方向分别跟随 L、D、F</td><td><code>M2 U M2 U2</code></td></tr><tr><td><code>x y z</code></td><td>整体旋转，方向分别跟随 R、U、F</td><td><code>x R U R' x'</code></td></tr><tr><td><code>'</code> / <code>2</code></td><td>逆转 / 半转</td><td><code>r'</code>、<code>U2</code></td></tr></table>
+<p>“编辑 → 输入贴纸状态”接受 54 个贴纸字符，按 <code>URFDLB</code> 六面顺序，每面从左到右、从上到下。大写颜色为普通约束，<code>?</code> 或 <code>.</code> 为未知，小写颜色忽略块朝向；某块仅放一个 <code>@</code> 且其他贴纸未知，表示只定朝向。中心方向在“选项”中单独设置。</p>
+<p>公式输入也兼容原版 <code>R-</code>、<code>R-1</code>、<code>R3</code> 逆转、<code>R²</code> 半转及 <code>(R U)3</code> 重复。原版对层组合 <code>Rs</code> 相当于 <code>R L'</code>，<code>Ra</code> 相当于 <code>R L</code>；本版将其展开为两次真实外层转动，计两步。小写 <code>r</code> 仍表示宽转，计一步。</p>
+<div class="note">公式中的小写字母表示宽转；54 贴纸状态中的小写颜色表示忽略朝向。两种输入的含义不同。</div>
+</section>
+<section id="results"><h2>原式结果行与最优搜索</h2>
+<p>方式一的每条结果保留展开图、Solver / Generator 按钮、公式、图案名称、最优复选框和运行 / 停止按钮。普通点击选择一项，Ctrl 点击切换选择，Shift 点击连续选择，Ctrl + Shift 增加连续区间。右键打开该魔方菜单，可复制、传送到编辑器、回放或删除。</p>
+<p>结果行采用紧凑排列，100% 比例下基准行高为 140、缩略图为 168×122；“求解 / 生成”与“名称”标签对齐，名称紧邻输入框。长公式会换行并增加行高。</p>
+<p>Solver / Generator 切换常规结果的显示方向。运行箭头可继续寻找公式；再次点击请求停止。“最优”复选框切换到真实精确搜索，再点击箭头开始。只有搜索证明不存在更短公式时，步数后才出现 <code>*</code>；勾选复选框本身不会授予最优标记。</p>
+<p>“选项 → 二阶段算法”可启用真实 UD / RL / FB 三轴并行搜索，默认关闭，与原版一致。表数据在同一进程内共享，不会每次点击都重新加载。</p>
+<p>超时或取消时，可能仍保留有效候选，但不会宣称已经证明最优。方式二的模 U 求解和生成有不同目标，因此其结果不会用显示层直接取逆来切换方向。</p>
+<p>Delete 删除选中条目。公式输入框中的 Enter 执行“应用”。Ctrl + F 把最后一条可用求解公式写入 <code>data/ctrlFsave.txt</code>，保留原版该快捷键的用途；它不是保存整个工作区。</p>
+</section>
+<section id="files"><h2>保存、加载与菜单</h2>
+<p>菜单依次是文件(F)、编辑(Y)、运行(Z)、选项(O)、帮助(H)。文件菜单提供加载、保存工作区、保存公式文本、HTML 导出和打印。已有条目时加载可选择替换或追加。编辑菜单提供删除、随机添加、排序、清空及状态输入；运行菜单提供选择项搜索与自动运行。“选项 → 收起主窗口结果区”可重新隐藏左侧。</p>
+<table><tr><th>格式</th><th>保存内容与用途</th></tr><tr><td><code>.cex</code> 工作区</td><td>保留图案、方向、部分约束、中心方向、原始动作、计步及结果终态。公式求解结果应使用此格式。</td></tr><tr><td>原版 <code>.txt</code> 公式文本</td><td>保存普通结果的生成公式，每行可带 <code>(步数f)</code> 和 <code>//图案名称</code>，用于与原版普通生成公式文件交换。与行当前显示 Solver / Generator 无关。</td></tr><tr><td>HTML / 打印</td><td>导出展开图、图案名称、公式及计步，方便阅读和分享。</td></tr></table>
+<p>加载结果会重新检查公式和终态。文件中的最优标记不作为本次搜索的证明；需要重新进行最优搜索才能取得经本程序证明的 <code>*</code>。普通 TXT 不足以表达模 U 和部分约束，不能替代公式模式工作区。</p>
+<p>旧 TXT 中尚无公式的图案也可用原版 48 个非中心贴纸的 Singmaster 排列表示，<code>N</code> 表示未知；这种排列与“输入贴纸状态”的 54 字符逐面排列不同。旧公式的 <code>Rs/Ra</code>、负指数和括号重复会在载入时转换为真实动作。</p>
+</section>
+<section id="formula"><h2>公式、模 U 与计步</h2>
+<p>公式模式默认接受已经复原或只差逻辑 U、U'、U2 的状态。搜索一旦进入该目标集合就结束该路径，不生成末尾 U；初始输入已在目标集合中则结果为零步。整体旋转改变握持姿态，不能把其他逻辑面偷换成 U。</p>
+<p>需要的首步 U 保留为真实动作，显示时加中括号，例如 <code>[U] R</code> 仍是两步。算法证明输入对某个 U 转动对称时，才在搜索根部跳过对应冗余分支。显示层不删除首尾动作，不改写公式，也不从显示字符串反推步数。</p>
+<table><tr><th>规则</th><th>处理</th></tr><tr><td><code>R r R</code>、<code>r R r</code>，含逆转与半转变体</td><td>搜索中禁止同字母单双层交替三连</td></tr><tr><td><code>r R</code>、<code>l R r</code></td><td>允许；不属于交替三连</td></tr><tr><td><code>L R …</code> 与 <code>R L …</code></td><td>若只交换相邻可交换动作，则保留一份公式</td></tr><tr><td>动作数</td><td>外层、宽转、中层每个动作计一步；x/y/z 不计步，界面不另列旋转次数</td></tr></table>
+<p>旋转按允许的旋转集合建立有限朝向闭包，每段保留到可达朝向的最短旋转代表，避免免费旋转无限循环。公式枚举的是规范路径，不列出任意插入 <code>x x'</code> 的无穷多拼写。</p>
+<h3>求解与生成有不同目标</h3>
+<p>“求解”从输入图案出发，达到复原的模 U 等价态。“生成”从复原态出发，达到输入图案的模 U 等价态。例如输入图案 <code>U R</code> 可用 <code>R'</code> 一步求解到 U，但不能用 <code>R</code> 一步生成该图案的模 U 等价态。生成目标在算法中单独处理。</p>
+<p>上述新规则只适用于公式模式。常规二阶段始终精确复原；单独 U 在常规模式仍需一步。</p>
+</section>
+<section id="search"><h2>搜索控制与结果状态</h2>
+<p>公式窗口默认大小为 550×670，以 610×740 为等比例布局参考。窗口可最小化、最大化和关闭，不设置始终置顶；打开后不会自动开始搜索。</p>
+<p>独立公式窗口上方是大文本区，以追加方式显示中文开始、深度与停止信息；同一步数公式连续放在一起。左下“允许使用的转动”依次排列 <code>U R F D L B</code>、<code>u r f d l b</code>、<code>M E S</code>、<code>x y z</code> 四行，其下竖排“允许中层转动”“允许双层转动”“允许整体旋转”总开关。右下三个按钮依次为“开始搜索”“清空窗口”“将解添加到主窗口”。</p>
+<p>外层动作默认全选；中层、双层、整体旋转的具体动作初始全部未选。先启用需要的类别，再逐项勾选；关闭类别后会保留逐项选择，但该类别不会参加搜索。转动角度、步数、结果数量、时间、节点、模 U 和剪枝等完整参数位于默认折叠的“搜索设置”。没有启用的动作不会出现在公式中，宽转每次计一步。</p>
+<ul><li>最少 / 最多步数约束计费转动，不包括整体旋转。到达目标即停止，不为凑最少步数绕行。</li><li>默认最大步数、时间、节点、结果数量全部不限，按步数递增输出，直到点击停止。最多步数的“不限”值在 API 中为 -1，0 仍表示只检查零步；其他三种预算的 0 表示不限。已在目标内等可证明穷尽的有限情况会正常结束。</li><li>标准剪枝适合一般情况；强化底层剪枝可能花更多准备时间换取更强下界。首次准备表需要时间，同进程后续任务可复用。</li><li>“停止搜索”发出取消请求，按钮进入“停止中…”。任务真正退出后恢复“开始搜索”，可再次启动。已找到的结果保留。</li><li>“达到时间 / 节点 / 结果上限”不等于无解或枚举完成。只有搜索范围穷尽才会明确报告完成。</li></ul>
+<p>公式行采用原版 <code>公式 (nf)</code> 格式。只有核心证明该深度最短时显示 <code>(nf*)</code>，不是按显示先后推断。</p>
+<p>每个输出结果通过独立的 54 贴纸几何模拟器验证。回放沿同一原始动作数组逐步更新图案；整体旋转会显示为动作，但不增加计费步数。</p>
+<p>搜索结果不会自动加入主窗口。“将解添加到主窗口”复制当前全部结果，搜索运行时也可点击；再次点击会再次添加全部结果，沿用原版行为。“清空窗口”只在停止后可用，会清除文本与对应结果缓冲。关闭公式窗口会先停止并等待搜索退出，再清空窗口；要保留结果，请先添加到主窗口并保存工作区。</p>
+</section>
+<section id="mcp"><h2>AI / MCP 批量调用</h2>
+<p><code>mcp/CubeExplorerMcp.exe</code> 是 stdio MCP 服务，由支持 MCP 的 AI 客户端启动。它通过常驻 <code>CubeExplorerEngine.exe</code> 调用本地算法，不需要 AI API Key，也不把图案发送到外部模型。保留 MCP 同目录的 <code>_internal</code> 文件夹。</p>
+<p>交付根目录的 <code>mcp-config.json</code> 已填入本机绝对路径；移动交付目录后需修改路径。常见客户端配置如下：</p>
+<pre>{
+  "mcpServers": {
+    "cube-explorer": {
+      "command": "D:\\Cube\\cube explorer\\new version\\dist\\CubeExplorerModern-0.3.2\\mcp\\CubeExplorerMcp.exe",
+      "args": ["--workspace", "D:\\Cube\\cube explorer\\new version\\dist\\CubeExplorerModern-0.3.2\\data"]
+    }
+  }
+}</pre>
+<table><tr><th>工具</th><th>作用</th></tr><tr><td><code>get_capabilities</code></td><td>查询模式、动作和参数</td></tr><tr><td><code>validate_cube</code></td><td>验证输入与搜索设置，不启动求解</td></tr><tr><td><code>apply_moves</code></td><td>真实应用动作，返回状态、步数和旋转次数</td></tr><tr><td><code>submit_solve</code></td><td>提交单项或批量求解；立即返回 job_id</td></tr><tr><td><code>validate_templates</code></td><td>验证保留的模板核心 API 参数，不枚举（无对应 GUI 页签）</td></tr><tr><td><code>submit_templates</code></td><td>批量枚举匹配状态，可附真实生成公式</td></tr><tr><td><code>get_job</code></td><td>查询各项进度及最终停止原因</td></tr><tr><td><code>get_results</code></td><td>按 cursor 分页回收已验证的结果</td></tr><tr><td><code>cancel_job</code></td><td>取消整批或指定 item_id，保留已有结果</td></tr></table>
+<h3>批量例子</h3><pre>{
+  "items": [
+    {"id":"normal","mode":"two_phase","scramble":"R U R' U'"},
+    {"id":"shortest","mode":"optimal","scramble":"R U F2",
+     "initial_solution":"F2 U' R'","time_limit_ms":30000},
+    {"id":"wide","mode":"formula","direction":"solve",
+     "scramble":"r U r'","move_symbols":"RUruxyz",
+     "max_turns":7,"max_results":20,
+     "modulo_u":true,"time_limit_ms":10000,"node_limit":10000000}
+  ],
+  "parallelism":2
+}</pre>
+<p>把返回的 <code>job_id</code> 交给 <code>get_job</code> 和 <code>get_results</code>。每次按 <code>next_cursor</code> 继续取页；运行中的空页不代表结束。结果包含 <code>moves/actions</code>、<code>turns</code>、<code>rotations</code>、<code>verified</code>、终态和公式文本。</p>
+<h3>搜索参数</h3><table>
+<tr><th>参数</th><th>含义 / 默认值</th></tr>
+<tr><td><code>mode / direction / id</code></td><td>two_phase、optimal 或 formula；solve 或 generate（默认 solve）；可选批内唯一项目 ID。optimal 对应界面方法一的“最优”选项</td></tr>
+<tr><td><code>scramble / facelets / pattern</code></td><td>三选一：打乱公式、54 贴纸字符串、直接角棱数组</td></tr>
+<tr><td><code>center_ori</code></td><td>URFDLB 六项，-1 不约束，0..3 约束中心朝向；只限公式模式</td></tr>
+<tr><td><code>move_symbols / allowed_moves</code></td><td>公式模式二选一；字母自动展开三个转角，或数组精确启用如 ["R","r'","U2"]；默认 URFDLB</td></tr>
+<tr><td><code>min_turns / max_turns</code></td><td>公式默认 0 / -1（-1 不限，0 只检查零步）；二阶段 / 最优 max_turns 默认 30，最大 60</td></tr>
+<tr><td><code>target_turns / max_phase1_turns</code></td><td>仅二阶段：达到目标长度即停止 / 第一阶段最大深度；均默认 20</td></tr>
+<tr><td><code>initial_solution / excluded_solutions</code></td><td>仅最优：合法候选上界 / 已展示公式的数组。均使用请求的 solve 或 generate 方向，候选会先独立验证</td></tr>
+<tr><td><code>use_triple_search</code></td><td>仅二阶段，默认 false；启用原式 UD / RL / FB 三轴，共享整项预算</td></tr>
+<tr><td><code>max_results</code></td><td>仅公式模式，默认 0（不限）</td></tr>
+<tr><td><code>time_limit_ms / node_limit</code></td><td>二阶段默认 5000 / 0；最优默认 30000 / 0；公式默认 0 / 0（不限）；0 为不限，公式时间包括准备阶段</td></tr>
+<tr><td><code>modulo_u</code></td><td>仅公式模式，默认 true，接受模 U 目标</td></tr>
+<tr><td><code>remove_u_symmetric_prefix</code></td><td>仅公式模式，默认 true，证明对称后跳过冗余首 U</td></tr>
+<tr><td><code>reject_alternating_triples / deduplicate_commuting</code></td><td>仅公式模式，均默认 true，分别禁止单双层交替三连 / 合并可交换动作换序的重复公式</td></tr>
+<tr><td><code>heuristic</code></td><td>仅公式模式，none / standard / strong，默认 standard</td></tr>
+<tr><td><code>memoize_dead_ends / quotient_free_rotations</code></td><td>仅公式模式，均默认 true；缓存完整无解子树 / 在动作集合通过机械证明后压缩免费朝向，用于速度及研究对照</td></tr>
+</table>
+<p><code>optimal</code> 仍使用完整魔方、18 种外层动作和精确复原目标。判断最优请读取结果及项目汇总中的 <code>optimality_proven</code>：有合法公式不等于已证明最优，超时或取消可能保留未证明的候选；排除已有短公式后找到的更长公式也不会被标为最优。<code>initial_solution</code> 和 <code>excluded_solutions</code> 不能用于另两种模式。</p>
+<p><code>pattern</code> 包含 <code>cp[8], co[8], ep[12], eo[12]</code>，未知项为 -1；可附 <code>frame:0..23</code> 与 <code>center_ori[6]</code>。角顺序 URF,UFL,ULB,UBR,DFR,DLF,DBL,DRB；棱顺序 UR,UF,UL,UB,DR,DF,DL,DB,FR,FL,BL,BR。优先复用 <code>apply_moves</code> 返回的 pattern，不要猜测 frame 编号。</p>
+<h3>批量模板枚举</h3>
+<p>模板任务使用 <code>submit_templates</code>。例如允许纯色面或一边条纹面，取前三个状态并计算真实生成公式：</p>
+<pre>{
+  "items": [{
+    "id":"face-patterns",
+    "templates":[
+      [0,0,0,0,0,0,0,0,0],
+      [1,1,1,0,0,0,0,0,0],
+      [5,5,5,5,5,5,5,5,5],
+      [5,5,5,5,5,5,5,5,5],
+      [5,5,5,5,5,5,5,5,5]
+    ],
+    "max_results":3,"find_generators":true
+  }],
+  "parallelism":1
+}</pre>
+<table><tr><th>模板参数</th><th>含义 / 默认值</th></tr>
+<tr><td><code>templates</code></td><td>必填 5×9 标签数组，0..5 为六种抽象类型；每个模板逐行排列</td></tr>
+<tr><td><code>allowed_templates</code></td><td>6×5 布尔数组，行按 URFDLB、列按五模板；默认全 true</td></tr>
+<tr><td><code>continuous</code></td><td>原版跨棱连续关系，默认 false</td></tr>
+<tr><td><code>max_results / time_limit_ms / node_limit</code></td><td>默认 100 / 30000 / 20000000；0 表示不限该项。总时限包括可选生成搜索，节点上限只计算模板枚举</td></tr>
+<tr><td><code>find_generators</code></td><td>默认 false；true 时对每个匹配状态执行真实二阶段生成</td></tr>
+<tr><td><code>generator_options</code></td><td>可设 max_turns=30、target_turns=20、max_phase1_turns=20、time_limit_ms=5000、node_limit=0，逐状态应用，仍受任务剩余总时间限制</td></tr></table>
+<p>继续用同一组 <code>get_job/get_results/cancel_job</code> 查询、分页或取消。模板结果为 <code>kind="cube_state"</code>，携带合法 <code>pattern/facelets</code> 和验证标记，根层没有虚构的公式与步数。只有生成成功才附 <code>generator</code>；达到生成预算仍可保留匹配状态，缺少生成式不代表零步。</p>
+<p>任务随引擎进程存活；关闭 MCP 连接会取消搜索并关闭引擎，重连不会恢复旧 job_id。请求、状态与结果写入 <code>data/jobs</code> 的 JSON / JSONL，可离线保留和检查。完整参数范围、错误约定及示例见 <a href="../docs/MCP.md">MCP 接口说明</a>。</p>
+</section>
+<section id="algorithm"><h2>学习核心算法</h2>
+<p>交付附有 <code>corresponding-source.zip</code>，解压后从以下文件阅读。工作区中同样保留可编辑的新源码和全部构建脚本。原版出处为 Herbert Kociemba 的 Cube Explorer，保留 GPL-3.0 许可与署名。</p>
+<table><tr><th>文件</th><th>阅读重点</th></tr><tr><td><code>include/cube/model.hpp</code><br><code>src/core/model.cpp</code></td><td>角棱、中心朝向、24 个握持参考系；宽转/中层的真实变换；独立几何回放</td></tr><tr><td><code>src/core/twophase.cpp</code></td><td>G1 子群、第一/二阶段坐标、16 对称压缩、模 3 剪枝表、迭代加深和取消</td></tr><tr><td><code>src/core/pattern_state.cpp</code></td><td>部分身份/朝向约束、贴纸标记输入及验证</td></tr><tr><td><code>src/core/pattern.cpp</code></td><td>求解/生成目标、模 U、旋转闭包、模式数据库下界、负缓存、无需累积历史结果的可交换动作规范次序</td></tr><tr><td><code>src/app/editor_state.cpp</code></td><td>允许暂态不合法的贴纸编辑、原版 AutoFix、角棱重置与真实贴纸转动</td></tr><tr><td><code>src/core/optimal.cpp</code></td><td>精确最优搜索、下界与最优性证明状态</td></tr><tr><td><code>src/engine/main.cpp</code></td><td>结构化请求、批量任务、进度、取消、分页和持久化结果</td></tr><tr><td><code>mcp/server.py</code></td><td>官方 MCP SDK 的工具 Schema 与本地引擎桥接</td></tr></table>
+<p>原版交互与本轮界面对应见 <a href="../docs/UI-MIGRATION.md">界面迁移说明</a>。先看 <a href="../docs/twophase-migration.md">二阶段迁移对应</a>、<a href="../docs/pattern-migration.md">公式算法与剪枝证明</a> 和 <a href="../docs/template-migration.md">原图案编辑器迁移</a>。模板核心文件为 <code>src/core/template_search.cpp</code>，只保留既有 MCP 接口，图案编辑器界面已按要求移除；再对照 <code>tests</code> 中独立物理验证和无剪枝 / 有剪枝解集比较。详细测试记录见 <a href="../docs/CORE-VALIDATION.md">验证报告</a>。</p>
+</section>
+<section id="limits"><h2>当前范围与验证</h2>
+<p>此版本保留常规二阶段、部分魔方公式枚举、原式控制与编辑交互，增加宽转、模 U、MCP、真实最优搜索和日夜主题。相机识别与深层对称界面按本轮范围排除；全魔方 48 同构/逆置换过滤、旧网页服务器、原常规 slice-mode 和专用大中心表尚未迁移。模板内的基础旋转/镜像匹配已保留。中心方向约束通过公式模式处理。常规二阶段不保证全局最优，最优标记只由独立精确搜索的证明授予。</p>
+<p>宽转与免费整体旋转扩大公式空间，深度枚举仍可能达到时间或节点预算。有限用例和差分验证不能证明所有输入的速度或正确性；程序因此逐条独立验证输出，并明确报告未穷尽的任务。具体基准和测试规模见验证报告。</p>
+<p>本软件动态使用 Qt 6.12，许可与对应源码随包提供；Python、MCP 及依赖许可位于 <code>mcp/licenses</code>。可替换兼容的 Qt DLL 或依据源码重新构建。参见 <a href="https://doc.qt.io/qt-6/licensing.html">Qt 官方许可说明</a>、<a href="../NOTICE.txt">发行说明与第三方出处</a>、<a href="../LICENSE">GPL 许可全文</a>。</p>
+</section><footer>本帮助可以离线阅读。搜索、验证、回放和 MCP 求解均使用本地核心。</footer>
+</main></html>

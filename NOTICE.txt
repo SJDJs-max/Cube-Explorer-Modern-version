@@ -1,0 +1,38 @@
+Cube Explorer - Modern version — Windows x64
+
+Original Cube Explorer algorithm and data: Herbert Kociemba.
+Upstream: https://github.com/hkociemba/CubeExplorer
+Reference source: Cube Explorer 5.15 HTM, commit 5cfee2297736ab56e8c615d4061cd433a56746d0.
+MCC (Movecount Coefficient) scoring model reference: Trangium's algSpeed / MovecountCoefficient.
+This is a modified C++20 / Qt modernization by 云起Arrebol, not an official upstream release.
+Application code is distributed under GPL-3.0, with original LICENSE attached.
+Corresponding application source, build scripts, tests and necessary table data
+are included in corresponding-source.zip. See docs/BUILD.md after extraction.
+
+Qt 6.12.0 QtBase (Core, Gui, Widgets, Concurrent and deployed plugins) is used
+as dynamically linked libraries. Qt source/third-party notices and license
+texts are included under licenses/qt; the unmodified corresponding source
+archive is licenses/qt/qtbase-everywhere-src-6.12.0.tar.xz.
+Source: https://download.qt.io/official_releases/qt/6.12/6.12.0/submodules/
+Licensing: https://doc.qt.io/qt-6/licensing.html
+The Qt DLLs and plugins can be replaced with compatible Windows x64 MinGW
+builds of the same ABI. No signature check prevents replacing them. Close the
+application before replacing libraries. To change ABI/toolchain, rebuild the
+application with scripts/build.ps1 and the corresponding Qt CMake package.
+Qt remains under its applicable LGPL/GPL and third-party license terms.
+
+GCC/MinGW runtime license and GCC Runtime Library Exception are included in
+licenses/gcc, licenses/mingw-w64 and licenses/winpthreads. Compiler version is
+GCC 15.1.0, acquired from the official Qt SDK tool repository.
+
+The MCP service bundles Python 3.13.17, official MCP Python SDK 2.3.0 and
+dependencies using PyInstaller 6.22.3. Pinned versions and included license
+texts are in mcp/licenses. Python bridge source is in corresponding-source.zip.
+MCP: https://github.com/modelcontextprotocol/python-sdk
+Python: https://www.python.org/
+PyInstaller: https://pyinstaller.org/
+
+All bundled binaries are unmodified upstream runtime components except the
+three CubeExplorer executables built from the corresponding application source.
+Ordinary solve uses the copied, checksum-verified original pruning tables.
+All per-result formulas and metrics are produced and verified locally.

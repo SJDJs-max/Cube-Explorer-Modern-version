@@ -1,0 +1,682 @@
+[
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\About.dfm",
+    "SHA256": "5F6F564CDEADD2022506CEC5174E12DCD0631B2835A58A8548EAADD79936A899",
+    "Length": 1535
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\About.pas",
+    "SHA256": "A7307CF03DF1990088E1BB16170FFA09E307D7376C79E6F8BF1A8A3D83BC455A",
+    "Length": 1605
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\centers.dfm",
+    "SHA256": "3849E3F218ACD864BC238E83A5DD50A4BF5F0787DC441D99011F90C39B7A2B14",
+    "Length": 6555
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\centers.pas",
+    "SHA256": "6445F09BA9A78AC5FF2A027DD089EEFBE0A74597BC938EB9996D10713532C793",
+    "Length": 3733
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\Compilers_.inc",
+    "SHA256": "F3D166839AD92B229D741671E0266FE8A418934A4B5177EABCC46DF83A93632E",
+    "Length": 7269
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\CordCube.pas",
+    "SHA256": "C5756D16ADFC145E72F13CFE504D1FF44C720C4C0081312D9D99C21D7506830D",
+    "Length": 124463
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\CosetExp.dfm",
+    "SHA256": "9ECF9A0850D07E9B425942136A93AF886FC0A7DFFED29931318186D91E0A240D",
+    "Length": 1574
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\CosetExp.pas",
+    "SHA256": "EF72EB980F2671D0A88878C71532EE6E11817A711237F313B318FB637F1BFECA",
+    "Length": 9402
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\cube.ini",
+    "SHA256": "1321AC552320B919AE7C59D637D465DC85CE5151875AC0ABF6AA5CD069066ED8",
+    "Length": 290
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\CubeDefs.pas",
+    "SHA256": "EED54D854D53D217150360CDE52EB1D266C41D8DAA2C27FACBD9AB265CB474D7",
+    "Length": 25543
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\CubiCube.pas",
+    "SHA256": "4A06FD8F94985686F494259B875C04ED4A2751965BC8F78466558709C63DC912",
+    "Length": 41916
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\cursors.res",
+    "SHA256": "2E04865E301296A61E88D13A10E908DD2C8770B7A5C377ADA9B011B8F569D61D",
+    "Length": 2152
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\D6OnHelpFix.pas",
+    "SHA256": "CD08D3031E377534048C2AE675D2F054ECA59A674AD86F19D7A379C47005D9F4",
+    "Length": 21209
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\DirectShow9.pas",
+    "SHA256": "5C32DDBEF7050F6B6BF8FE5FC5D3CA447F4E876BA3654894DEF6D87817B54DDD",
+    "Length": 1375118
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\DSPack.pas",
+    "SHA256": "F6843DE3E0A20482AD46F12D6F2C4B5E15B90A7E7A2FE275CE625C1581A7B2C5",
+    "Length": 226665
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\DSUtil.pas",
+    "SHA256": "6685D0D5064CEAA3F41FFFDFB15DF857DB2B34FA60725680A1C68263006B2979",
+    "Length": 204689
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\FaceCube.pas",
+    "SHA256": "EC8410E6E4C73DB0ACCA3B34F260CE23BF1014D7146F13C8FDE1581FEDA89E3E",
+    "Length": 39560
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\FastMM4.pas",
+    "SHA256": "EFA0447C4374EC119A8767F5496EA077472687FCFF448677E1BC30711FF5BA6A",
+    "Length": 302431
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\FastMM4Messages.pas",
+    "SHA256": "8E6457F0FDCB992C742FD44C794DEAE275A0E1144169CF975E59E86600206275",
+    "Length": 6787
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\FastMM4Options.inc",
+    "SHA256": "17A2FAF5CA657F5F00EB38D74960E3C98CF23062EB70F8327CB0A79111F21057",
+    "Length": 14837
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\gui.jpg",
+    "SHA256": "7843B705E2C91BC3212C341D040F031BE5319F7C46B70DBB6D1ACD7EDCE378BF",
+    "Length": 96712
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\Incomp.dfm",
+    "SHA256": "A123F392B306EA9518F74865EDD29BF9C7E99E8E9ECB110EE936B4B16CDB3E4B",
+    "Length": 3814
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\Incomp.pas",
+    "SHA256": "3A50B9FC59880AE6DF7771AECF4995C84332D2FD92B6CB3C124B5BC719F770B4",
+    "Length": 82702
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\LICENSE",
+    "SHA256": "8CEB4B9EE5ADEDDE47B31E975C1D90C73AD27B6B165A1DCD80C7C545EB65B903",
+    "Length": 35147
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\MathFuncs.pas",
+    "SHA256": "5DC418F13FCFA2BB83DC9ECEF48AF6CB674F7FE78BA6E46B0ECF747A151EA389",
+    "Length": 2171
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\MTRandom.pas",
+    "SHA256": "4191F06C5ABC4C695BB0AE80BC8AF23ABD64D97FA9D7BD58560D87B6F034A869",
+    "Length": 96190
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\OptBatch.dfm",
+    "SHA256": "813A1FF7D1123167DEFFC6C879C35AC87E1004CEB3DD7BECAC94357EBDCAB1FA",
+    "Length": 2116
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\OptBatch.pas",
+    "SHA256": "582FAE19C4C23F6523B41C799EEE0EE34045C86077F2C8B271DB1D04DA495567",
+    "Length": 1451
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\OptimalThread.pas",
+    "SHA256": "EB3E436809A30D57E81EB8890AFD1791A056FE4B287DBFFF9C5476BA9D95F58D",
+    "Length": 629
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\Options.dfm",
+    "SHA256": "8A719D3344116CCE041FF427ADB5EC9DDA5620A4AF83FD910D267CFFB9CCC9AF",
+    "Length": 2738
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\Options.pas",
+    "SHA256": "352818F820B07DD629A8E09B174359743058CB9BF339C95C39E6025FF47290BE",
+    "Length": 4133
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\OptOptions.dfm",
+    "SHA256": "BFC838DA669043E1F4B7DC1D8C67C138B35CC158CA4B54FBE501524C23E57EC4",
+    "Length": 1202
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\OptOptions.pas",
+    "SHA256": "68BE75B6D6A21864C74BA1FAD0EF7A0BA267FA9BA16D33D5E6EEB50C6F6454DF",
+    "Length": 3706
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\OptSearch.pas",
+    "SHA256": "1AD2510343D5D0D923540C6264C16214CC83BFA37AAB72BBDEC0EA29770653DE",
+    "Length": 3111
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\PatternSearch.pas",
+    "SHA256": "02C3AB492233D6DDD9E38D0221A2199E4E7CB51A63A57E61AA556A2868169727",
+    "Length": 9684
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\README.md",
+    "SHA256": "F0944C850C6A0735DC18E6D5BF1180C640CCECA5DDAAC790F3E12EE48DD9A63E",
+    "Length": 666
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\readme.txt",
+    "SHA256": "2D83E3DAFE3E590BD787AEA2B9F957B983701B28867D60DC06166D5F44E82DA6",
+    "Length": 19716
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\Rubik.dpr",
+    "SHA256": "E7AEB6BDED68DF7F5E9729CE4D121D72F5411C3766B0B9B9C75352F123D5886A",
+    "Length": 2068
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\rubik.ico",
+    "SHA256": "A33D00C855510B89C708F0F0D17B7FE136547AB41D77BD9A5F2CD007AACC8249",
+    "Length": 766
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\Rubik.res",
+    "SHA256": "AD1B83FCB4EBB418DDF285BDF306EBC0D1733E2C9F30C6AA32A7E788217273DC",
+    "Length": 876
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\RubikMain.dfm",
+    "SHA256": "F05A079E6A91D5BC6FF6CC650D5D6D67807916652C94A5B7923C672AC209BB0C",
+    "Length": 688546
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\RubikMain.pas",
+    "SHA256": "F48422BE489E7FD90FEBBA49DCEC28C79A7103E2154EFD48389A6CDF33B4166D",
+    "Length": 220555
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\RunSetup.dfm",
+    "SHA256": "7DB9ED7F5BCF244C32AD0C972AEF637285CDA7D62B0FF892C4D308DFA4466347",
+    "Length": 2421
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\RunSetup.pas",
+    "SHA256": "5F56D8EB9A9C550853A8EE0EABB4FFA3187B934CF80500AC41EC633D8BAA2A3A",
+    "Length": 3174
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\Search.pas",
+    "SHA256": "5DFE78405B1DD93F2C43991C57D2B61A35DD12D28AF1CED5BA14032CD0D439AD",
+    "Length": 59860
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\ServPort.dfm",
+    "SHA256": "D1311D993095B63C7499CCA7D0D04265208B132041FD8C849156247A02EC7DB2",
+    "Length": 1272
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\ServPort.pas",
+    "SHA256": "7A1D829DD1944F96B3621453636819AB4467B8CC4BB7863B6F3B5615E88EC16C",
+    "Length": 3804
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\Statistics.dfm",
+    "SHA256": "669525407340EBB2555E6FFE51096A2DCFDD77011C966D233BCCBD40161934E4",
+    "Length": 707
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\Statistics.pas",
+    "SHA256": "D5D14EC50A8B68104A0C3D07E60619A006602271444BC0BA7581ECBF6E660751",
+    "Length": 349
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\Symmetries.pas",
+    "SHA256": "180B144BFE57DA0B304DFFF7F4F29C5E40836F4981AF6E4950F6FA25C8765B40",
+    "Length": 7755
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\SymSearch.pas",
+    "SHA256": "69799819C8EFF6917DAC2CECEB70B1C7F9C639AA2CD6CD767BF9028DC2D18DFA",
+    "Length": 24850
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\TcpServer.pas",
+    "SHA256": "F2D0C28F01044DBC0A222D1CB717CCD56092D76E921765B9339378C62DF02852",
+    "Length": 10579
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\TripSearch.pas",
+    "SHA256": "76128BF27F801ACF94E93DC15ACFF4D89D941BD0F5BB62DDDA083CBF24854795",
+    "Length": 5816
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\UKeyboardOutput.pas",
+    "SHA256": "134C9801C6D00B966C4E902E58318CF54EAD1FC7F6EA993745E567B7EFD591FE",
+    "Length": 43748
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\WebCam.dfm",
+    "SHA256": "B7DB29860EBD5E7757EA87532CC2A0C75C37A0A58F922DF2977C3C25C739AA3F",
+    "Length": 1120
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\WebCam.pas",
+    "SHA256": "EF256E5A6DD82A1EF260732CBDA54579EDBF3DFC5B8622CEB6104F92A4A92BCA",
+    "Length": 2507
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_c21.bmp",
+    "SHA256": "509A3C0A1171E89ACEC6B99F402713E858B99A499A22AEF0F6CB3A25829CCCDD",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_c21p.bmp",
+    "SHA256": "79F99B7AB220AF3E6DDA7AB3E8F7458041D99AC9DA7B211A51633423C6AEFAE1",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_c22.bmp",
+    "SHA256": "11CEF6681B713D07C4E3495EEEFEE4CED5E0CE964B69769C539B27C479E70EFC",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_c22p.bmp",
+    "SHA256": "EFE8B49DE3E3EDF4911828C9115D27475D89A36B1E00BF2D0928BB33875DABC4",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_c23.bmp",
+    "SHA256": "9C8323FAC06D3DF0695624222BE1BDA34B562702CB03D6D168BBAAFBB4CEAB07",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_c23p.bmp",
+    "SHA256": "AFA4A4ACCD5B0CC4F930009FD8830820466FB49D07398F4402DB853F213CBD5F",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_c24.bmp",
+    "SHA256": "3E2CD8505A434D73049BB86A38BA1154261E7E6EB4E40CA16F5474CD7E5DD8B1",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_c24p.bmp",
+    "SHA256": "F7C9780CE15B525F26FEC1899F5DE3280ABB5FF4D5FEE1FCB4A4668E70317428",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_c25.bmp",
+    "SHA256": "A6A1FAC80968909951565948B2CB241307C1DB3B94A9813A7BAE035CBB4003B9",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_c25p.bmp",
+    "SHA256": "4F575C6902147F8BBC4872527EB39E3610F4E01D05AE10EDA2F564715E9C6449",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_c26.bmp",
+    "SHA256": "B41964176750F6CD18D0D93583D2375D747D886FD2AF2DE2734FFE1F0E294ADA",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_c26p.bmp",
+    "SHA256": "021FB49C53A120253CDE4950466C65A4639997D142D66CB64C5BF56B927CCEB4",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_m_r4_r3_r2.bmp",
+    "SHA256": "26FE221020B32B422619B58A6190C49ED5B83BFE45051F8A8672DC58E86EEBD9",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_m4_r2e.bmp",
+    "SHA256": "9A7E3FED1E7D84BC292A6900034B1009078179A7C375301459EB2DB12DE2CD34",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_mc_r2e_r2e.bmp",
+    "SHA256": "FF1A2D02864217D9E7307080B823EFDAEEBA991B76E3B5F29A15CF0354C747A4",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_mc_r2e.bmp",
+    "SHA256": "940F8E2C5982FBD9FD7E19F5A02AF92B3ABA809D827A9A7986D4CF0ECA9B62FA",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_mc_r2f.bmp",
+    "SHA256": "C631490BFAAC601C19A9C7066A1C616D9B83F03BFC3245EF6E551F370829FB2F",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_mc_r3_r2e.bmp",
+    "SHA256": "DFB5E3F215239AF4F03A8A9C96864C64082E8505A2F488EA571C8D289EDA2DFA",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_mc_r3.bmp",
+    "SHA256": "0FEE0998DAB70C4E0D674CAEE262917CC7CBD0BF7F9DE29CAD36ED4EE4BA55CE",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_mc_r4_r2.bmp",
+    "SHA256": "6A82F057D0D39AB0E923E3D94E0391B0DDB03D4CAF5750582B8080AA1BC7FE46",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_mc_r4.bmp",
+    "SHA256": "EF57114583F483D3C33846008A0ED1029CAB3BE5F45931CBA90C294287EAACAB",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_me_r2f_r2f.bmp",
+    "SHA256": "07AD1B0294134FD18EA11C6923F40AC74E10D69F3AB596E62E359B9051C9B90B",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_me_r2f.bmp",
+    "SHA256": "93E57A05F058E9893B668BEF34FB19D7AC7C9240F3656188999F4CE9C8E1A46F",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_me_r3_r2_r2.bmp",
+    "SHA256": "3E8A12C0762472DA2B86D19BB9BA3A897597AAB0CE6E41D1A56534C6E1B24035",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_me_r3.bmp",
+    "SHA256": "166FF11B76BF0CF82A578051AB75F594EFE2045B97958AB5C481B87796FE2081",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_me_r4.bmp",
+    "SHA256": "41454A9191784B488E0908E213BF62ADF9A443F08297884004C956A13A601609",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_mf_r2e.bmp",
+    "SHA256": "18B467FDF8DA28D28C6465958278E5876708803F556B26477A3A4DCD734E1190",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_mf_r2f_r2f.bmp",
+    "SHA256": "03BA292069F9F06A79C7B36CFA5E1B3AA75A03F46D2F5F84A87288DB605A76DE",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_mf_r2f.bmp",
+    "SHA256": "5BD3C532864087858CD78A6648DC5E7FCAFE7FE073AA6FF72FCC226B3B84A3E4",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_mf_r3_r2_r2.bmp",
+    "SHA256": "D945C7540F7EED77098D3A4EA40FA64764FEF487678CB1B6E4F50665F2F769C0",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_p.bmp",
+    "SHA256": "BC2F128D0F04CABD944C3F7CF9048E0615237F0E7511B9546D2CD8A3294BB0E4",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_r2e_r2e.bmp",
+    "SHA256": "7F27F8EF1F79AC681CD44C6F0549023E1F5573CCAAA1868DADD70BDF5E4B6B98",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_r2f_r2f.bmp",
+    "SHA256": "E6E82B086BD9AA0293465EE7C85C69F451B6E95A8FD139C8680FDC47FEB5D7FE",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_r3_r2e.bmp",
+    "SHA256": "B923AEA8917DF9356602690B7E23EBEDEA882784DDD6DAE6808646947272796D",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_r3_r2f.bmp",
+    "SHA256": "36940DD95CAC3D01637C88C670ED63A83B850CE87F83FC2C59FB74AE4A60986E",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_r4_r2.bmp",
+    "SHA256": "2775C2F064D80B0305A0DF20D48EA2B22E183BA47DD0CCEB2D76EBF8C0806E30",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_r4_r3_r2.bmp",
+    "SHA256": "E459C6F52F568B66D96E8875B7D3C210E4905E874810CEC2268CC604CB5136EC",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_s21.bmp",
+    "SHA256": "DBB43EDF8C72C225FFE0BF8F54A6D498F15122BD9465065B2D3F5AF488E18056",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_s21p.bmp",
+    "SHA256": "33F61DF7A1EA74EF98E58A5971F7D5F29097130492CE6E9B4A7F42D0DFBCC645",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_s22.bmp",
+    "SHA256": "B413AF82184986CA50BFCBC697F2740388D0FD0DCED8B239817ACED4D6BB64CD",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_s22p.bmp",
+    "SHA256": "5E59BEA2825BD290C69836858D36A14DAD226C47E7786E73A57BEA0CC98C65EA",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_s23.bmp",
+    "SHA256": "5F9CF8B9602AE839D5639488F202B178C1E82579B16206FBB7BD763375A5FC67",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_s23p.bmp",
+    "SHA256": "887987EE88F20B2FE046EE7E1E15CBB7125FDBA64AEEE425879C1D2F9CD2C912",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_s31.bmp",
+    "SHA256": "FABFB4711B68325EB594D5DF5307E3DA92E790843BE624767801FF26C21FD70E",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_s32.bmp",
+    "SHA256": "6D1E530A9DD960226C826EBED84F8D0929AC1E604D57D08082E3C85AB464A893",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_s33.bmp",
+    "SHA256": "EB5376FCAFA53C1E79FBD70B59E548DAE38CEDE3D9BAB5E5C40ECBA8B0FE9CDC",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_s34.bmp",
+    "SHA256": "457FF3D57D68834B7F700B8EEFCD6BAFEF8EDBECC90B05EBB06D7F8E38751B88",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_s41.bmp",
+    "SHA256": "ECD0C216E566045A23CA68942F3B73415C54E517A0B38384D878F8A1775EAF8E",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_s41p.bmp",
+    "SHA256": "4985C5F8F0E22010C459ED672DA3ABF2471E389D9BD4F76CFDFDB61D709959FC",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_s42.bmp",
+    "SHA256": "9ABE1B8F918B3389FE987DA4C368D5580A477FF060C2C1162CE0416CEDE6B4DC",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_s42p.bmp",
+    "SHA256": "BD5F476010221E0286748ED3075E8D969F4F70F824D325E205F1DD6DF90E754A",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_s43.bmp",
+    "SHA256": "44442CE24DC61EF23465ECE3B47C5667EAC2EA69C12D0D89699232C422D5C563",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube_s43p.bmp",
+    "SHA256": "9515C94629A8153916F1515D318890B4A5FB0739E712415DBCE646D62CBD5C7E",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\symcube.bmp",
+    "SHA256": "54AAF1AFF607694966D6C2013EE4899187024BAD5C260E134FE62D18EECF6399",
+    "Length": 858
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\turn.bmp",
+    "SHA256": "38C492DB1B8E7607AF83FE0EF18212C74965C3049DE71C6367BDFA77D6F3A7AE",
+    "Length": 3576
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\turn1.bmp",
+    "SHA256": "4441CC887A5BABBE14313BBCEA629B415A85A6E29AA67A104CC3C629FD36AF36",
+    "Length": 3576
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\bitmaps\\turn2.bmp",
+    "SHA256": "566AA272B5EAFB8BF565C8D960192F95615CC17046AFE9DC860C99EA1427ED5B",
+    "Length": 3576
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\faces\\blue1.gif",
+    "SHA256": "B467A3B89E011323C180E9209C5A357AD4BADBFA0334DC32F3573ED60BA6BDF3",
+    "Length": 139
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\faces\\blue2.gif",
+    "SHA256": "030177123213FB05B501D53575BF772E13A647B140F612834FCA67886C3AE789",
+    "Length": 159
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\faces\\blue3.gif",
+    "SHA256": "2FC41502CFC67759DD11596BA738227815E10E731DC24BCA2A369A1F2311159B",
+    "Length": 118
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\faces\\green1.gif",
+    "SHA256": "97FDBD525C3C26F001546BB6757D72A84BA9D314B4D2DF4CD2864B47289A8481",
+    "Length": 139
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\faces\\green2.gif",
+    "SHA256": "3E753647E4CB65A180F0EF5EAAD3BCA29DAB13B27FA2D6976F7CE5125F681246",
+    "Length": 159
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\faces\\green3.gif",
+    "SHA256": "8BC21E27DA7BBE82337225BE2B7489C34200DDB3866E1459A9F4AF2D79496CDA",
+    "Length": 118
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\faces\\grey1.gif",
+    "SHA256": "2FDD091861854F1A30D15595A5F763BBF46FD944734C1CC234B094ED0ECC590F",
+    "Length": 139
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\faces\\grey2.gif",
+    "SHA256": "35987A5EB15BFB59DA7FF444E65F1EF37759589BB3C0EE14C60D20C3F6029B2A",
+    "Length": 159
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\faces\\grey3.gif",
+    "SHA256": "0E1F43F57A4E1767AB3DC8DECBCE0086431A01356C9EB30E7CBCD26A31A1C5EB",
+    "Length": 118
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\faces\\offline.gif",
+    "SHA256": "552558CCBAF659C0751F40757B80BD24589E589996732A7B3EE8BC36FDE384A0",
+    "Length": 1392
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\faces\\online.gif",
+    "SHA256": "8F69E10876805B747A3AD08A818D46AC7E731B1AF417EA6E259D9B6B7DEB65C5",
+    "Length": 49
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\faces\\orange1.gif",
+    "SHA256": "E15685B21279998AD32533C82FD34C026C8DE8C4EB3B29CFA67074EE7140DA74",
+    "Length": 139
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\faces\\orange2.gif",
+    "SHA256": "A932A23C1415FD6DA5C58C82C7C2DC1F1BD18579AFF0803278B1E6189CF5B406",
+    "Length": 159
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\faces\\orange3.gif",
+    "SHA256": "7630B888D33FDC0C2B8003293A25CE5F81A4BB9EC239A61FDB758C4F8D15EDB2",
+    "Length": 118
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\faces\\red1.gif",
+    "SHA256": "20A7FA55F9E8EB738231D9D95BF4A8FAE044FA7D70637107F29364FF4E1EAC37",
+    "Length": 139
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\faces\\red2.gif",
+    "SHA256": "DF28A08D7BD19D263A9C411966450819E665BF3E87D18F9874C9871422EEC3F8",
+    "Length": 159
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\faces\\red3.gif",
+    "SHA256": "0D982770290F8046922BE8E07B85C1D31400355DC98EE30A6A7EE296AAFC7A9F",
+    "Length": 118
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\faces\\white1.gif",
+    "SHA256": "FC827D88E0E4C2926455195F9066147F93CFFADE1165A58607D1484AE7E63796",
+    "Length": 139
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\faces\\white2.gif",
+    "SHA256": "9129044A9581626E883E6C9279B24D85A1F750F51FEDA9345B446B7437CD9DD4",
+    "Length": 159
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\faces\\white3.gif",
+    "SHA256": "FD5D581D390FC03F24FF3B74F46C7A5919B7B50CDAFC3B682CB605E7C97B5870",
+    "Length": 118
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\faces\\yellow1.gif",
+    "SHA256": "FB929E13465300A57FBB32DFB901FF5A7B3075A553394ED4D9B547D2E6A2B815",
+    "Length": 139
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\faces\\yellow2.gif",
+    "SHA256": "1FADE15D1553318F4ACC52BCED0EE4797B706D1B16F1507F9CA583F13AA5A43E",
+    "Length": 159
+  },
+  {
+    "Path": "D:\\Cube\\cube explorer\\raw\\CubeExplorer-master\\faces\\yellow3.gif",
+    "SHA256": "BE29329C623F804000C1F923F4D0650BE267415629D314521DFD409113B73407",
+    "Length": 118
+  }
+]
