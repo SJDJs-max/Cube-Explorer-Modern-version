@@ -288,6 +288,30 @@ inline void runUiSmoke(MainWindow &window, QApplication &app, const QString &scr
             XCrossDialog xcDialog(scr, window.canvas()->colors(), 1.0, &window);
             xcDialog.show();
             QCoreApplication::processEvents();
+            check(xcDialog.hasSlotSwatchIcon(0) && xcDialog.hasSlotSwatchIcon(1) &&
+                      xcDialog.hasSlotSwatchIcon(2) && xcDialog.hasSlotSwatchIcon(3),
+                  "XCross dialog slots must display color swatch icons");
+            check(xcDialog.preRotationMode() == PatternPreRotation::YOnly,
+                  "XCross dialog pre-rotation should default to YOnly (finishes on D)");
+            check(xcDialog.slotButtonText(0) == "白-蓝红 Pair" &&
+                      xcDialog.slotButtonText(1) == "白-蓝橙 Pair" &&
+                      xcDialog.slotButtonText(2) == "白-绿红 Pair" &&
+                      xcDialog.slotButtonText(3) == "白-绿橙 Pair",
+                  "Default White-bottom XCross slot color labels mismatch");
+            xcDialog.selectBottomFace(3); // Switch to Yellow bottom
+            QCoreApplication::processEvents();
+            check(xcDialog.slotButtonText(0) == "黄-绿红 Pair" &&
+                      xcDialog.slotButtonText(1) == "黄-绿橙 Pair" &&
+                      xcDialog.slotButtonText(2) == "黄-蓝红 Pair" &&
+                      xcDialog.slotButtonText(3) == "黄-蓝橙 Pair",
+                  "Yellow-bottom XCross slot color labels mismatch");
+            xcDialog.selectBottomFace(0); // Back to White bottom
+            xcDialog.toggleSlot(2);       // Select White-Green-Red
+            QCoreApplication::processEvents();
+            check(formatDisplayMoves(parse_moves("y' R' U' R"), true) == "[y'] R' U' R" &&
+                      formatDisplayMoves(parse_moves("x' y U R U' R'"), true) == "[x' y] [U] R U' R'" &&
+                      formatDisplayMoves(parse_moves("U R U' R'"), true) == "[U] R U' R'",
+                  "Pre-rotation and pre-AUF bracket display formatting mismatch");
             shot("-xcross-dialog", &xcDialog);
             xcDialog.close();
         }
@@ -334,6 +358,19 @@ inline void runUiSmoke(MainWindow &window, QApplication &app, const QString &scr
         check(panel->isWindow() && panel->isVisible(), "Formula search must open a separate visible window");
         check(!panel->busy() && panel->startText() == "开始搜索", "Opening formula mode started search");
         check(panel->resultCount() == 0, "New formula window must start with an empty buffer");
+        auto *preRotCombo = panel->findChild<QComboBox *>("formulaPreRotation");
+        check(preRotCombo != nullptr && preRotCombo->currentIndex() == 0,
+              "Formula pre-rotation combo missing or not defaulting to None");
+        panel->setPreRotationMode(PatternPreRotation::YOnly);
+        check(preRotCombo->currentIndex() == 1 && panel->request().pre_rotation == PatternPreRotation::YOnly &&
+                  panel->request().require_d_on_d,
+              "Formula pre-rotation YOnly mode did not wire to request");
+        panel->setPreRotationMode(PatternPreRotation::All24);
+        check(preRotCombo->currentIndex() == 2 && panel->request().pre_rotation == PatternPreRotation::All24 &&
+                  panel->request().require_d_on_d,
+              "Formula pre-rotation All24 mode did not wire to request");
+        panel->setPreRotationMode(PatternPreRotation::None);
+        check(!panel->request().require_d_on_d, "Formula pre-rotation None should not force require_d_on_d");
         shot("-formula-day", panel);
         window.setDark(true);
         shot("-formula-night", panel);

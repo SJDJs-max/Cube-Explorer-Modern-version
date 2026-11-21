@@ -22,7 +22,8 @@ class FormulaWindow final : public QDialog {
     QDoubleSpinBox *nodes_ = nullptr;
     QCheckBox *modU_ = nullptr, *symmetry_ = nullptr, *dedup_ = nullptr, *triples_ = nullptr,
               *memoize_ = nullptr, *rotationQuotient_ = nullptr;
-    QComboBox *heuristic_ = nullptr;
+    QComboBox *heuristic_ = nullptr, *preRotation_ = nullptr;
+    QLabel *preRotLabel_ = nullptr, *preRotNoteLabel_ = nullptr;
     QPushButton *fineMovesBtn_ = nullptr;
     QComboBox *mccSort_ = nullptr;
     QToolButton *mccParamsBtn_ = nullptr;
@@ -98,6 +99,8 @@ class FormulaWindow final : public QDialog {
     [[nodiscard]] const std::optional<PatternReport>& lastReport() const { return lastReport_; }
     void smokeConfigure(PatternState, int maximum);
     void setModuloU(bool enabled);
+    void setPreRotationMode(PatternPreRotation mode);
+    void setPreRotateY(bool enabled);
     void setMovePowerEnabled(int symbolIndex, int powerIndex, bool enabled);
     void setMaxSymbolUses(int symbolIndex, int limit);
     void setMaxRotations(int limit);

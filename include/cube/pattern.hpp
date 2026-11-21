@@ -37,6 +37,7 @@ struct PatternState {
 enum class PatternDirection { Solve, Generate };
 enum class PatternStop { Exhausted, ResultLimit, TimeLimit, NodeLimit, Cancelled, InvalidInput };
 enum class PatternHeuristic { None, Standard, Strong };
+enum class PatternPreRotation { None, YOnly, All24 };
 
 struct PatternRequest {
     PatternState pattern;
@@ -63,6 +64,17 @@ struct PatternRequest {
     // Only enabled after a mechanical reachability check proves that free
     // rotations can reset the notation context for every abstract paid move.
     bool quotient_free_rotations = true;
+    // Designed for Cross / XCross solving: allows an initial y / y2 / y' (4
+    // orientations) or full 24-orientation (x / y / z) pre-rotation before the
+    // first turn only, without enabling mid-solve rotations unless rotations
+    // are also in allowed_moves.
+    PatternPreRotation pre_rotation = PatternPreRotation::None;
+    bool pre_rotate_y = false;
+    // When true, the terminal holding frame must place the initial physical D
+    // center (logical_face(pattern.frame, Face::D)) back on physical Face::D
+    // upon completion (e.g. an initial x/z pre-rotation combined with wide/slice
+    // turns r/l/f/b/M/S that bring the Cross center onto physical D at the end).
+    bool require_d_on_d = false;
     // Optional fine-grained usage limits (-1 means unlimited; 0 forbids).
     int max_rotations = -1;
     std::array<int, 18> max_symbol_uses{-1, -1, -1, -1, -1, -1, -1, -1, -1,

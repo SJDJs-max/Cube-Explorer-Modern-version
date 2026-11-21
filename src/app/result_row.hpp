@@ -135,7 +135,7 @@ class ResultRow final : public QFrame {
             layoutChildren();
             return;
         }
-        const auto text = qstr(format_moves(d->moves, d->formula));
+        const auto text = formatDisplayMoves(d->moves, d->formula);
         QString displayed = text + (text.isEmpty() ? "" : "  ") +
                             QString("(%1f%2)").arg(d->turns).arg(d->optimalityProven ? "*" : "");
         if (d->formula && d->mcc >= 0.0)

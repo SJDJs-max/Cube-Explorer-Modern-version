@@ -319,6 +319,20 @@ int main(int argc, char **argv) {
                     require(sortedOut[i - 1].mcc <= sortedOut[i].mcc + 1e-9,
                             "MCC -> Moves sort did not order results by ascending MCC");
             }
+            // Pre-rotation bracket formatting in FormulaWindow output:
+            fine.clearResults();
+            fine.setMccSortMode(0);
+            fine.setModuloU(false);
+            fine.setPreRotationMode(PatternPreRotation::YOnly);
+            for (char c : std::string("URFDLB"))
+                fine.findChild<QCheckBox *>("formulaMove_" + QString(c))->setChecked(c == 'R' || c == 'U' || c == 'L');
+            fine.smokeConfigure(pattern_from_cube(cube::apply(CubeState{}, parse_moves("F' U F"))), 3);
+            fine.startSearch();
+            waitIdle(fine);
+            auto *fineOut = fine.findChild<QPlainTextEdit *>("formulaOutput");
+            require(fineOut && fineOut->toPlainText().contains("[y'] R' U' R") &&
+                        fineOut->toPlainText().contains("[y] L' U' L"),
+                    "FormulaWindow output did not bracket leading pre-rotations");
         }
         std::cout << "formula_window_tests: " << checks << " checks passed\n";
     } catch (const std::exception &error) {

@@ -227,6 +227,22 @@ FormulaWindow::FormulaWindow(PatternState input, bool generate, std::function<vo
         settings_.push_back(checks[i]);
     }
     advancedLayout->addLayout(rules);
+
+    auto *preRotRow = new QHBoxLayout;
+    preRotRow->setContentsMargins(0, 2, 0, 0);
+    preRotRow->setSpacing(6);
+    preRotLabel_ = new QLabel;
+    preRotation_ = new QComboBox;
+    preRotation_->setObjectName("formulaPreRotation");
+    preRotation_->addItems({"", "", ""});
+    preRotation_->setCurrentIndex(0);
+    preRotNoteLabel_ = new QLabel;
+    preRotNoteLabel_->setObjectName("smallMuted");
+    preRotRow->addWidget(preRotLabel_);
+    preRotRow->addWidget(preRotation_, 1);
+    preRotRow->addWidget(preRotNoteLabel_);
+    settings_.push_back(preRotation_);
+    advancedLayout->addLayout(preRotRow);
     advanced->hide();
     outer->addWidget(advanced);
     connect(fold_, &QToolButton::toggled, this, [this, advanced](bool expanded) {
@@ -578,7 +594,7 @@ std::vector<std::size_t> FormulaWindow::displayOrder() const {
 }
 
 QString FormulaWindow::formatResultLine(const ResultData &data) const {
-    const auto moves = qstr(format_moves(data.moves, true));
+    const auto moves = formatDisplayMoves(data.moves, true);
     QString line = QString("%1%2(%3f%4)")
                        .arg(moves)
                        .arg(moves.isEmpty() ? "" : " ")
@@ -629,6 +645,19 @@ void FormulaWindow::refreshAppearance() {
 void FormulaWindow::setModuloU(bool enabled) {
     if (modU_)
         modU_->setChecked(enabled);
+}
+
+void FormulaWindow::setPreRotationMode(PatternPreRotation mode) {
+    if (!preRotation_)
+        return;
+    const int idx = mode == PatternPreRotation::YOnly   ? 1
+                    : mode == PatternPreRotation::All24 ? 2
+                                                        : 0;
+    preRotation_->setCurrentIndex(idx);
+}
+
+void FormulaWindow::setPreRotateY(bool enabled) {
+    setPreRotationMode(enabled ? PatternPreRotation::YOnly : PatternPreRotation::None);
 }
 
 void FormulaWindow::setMovePowerEnabled(int symbolIndex, int powerIndex, bool enabled) {
@@ -721,6 +750,29 @@ void FormulaWindow::retranslateUi() {
     rotationQuotient_->setToolTip(
         trUi("仅在核心证明动作集合适用时启用；需同时启用无解分支缓存。",
              "Enabled when move set permits; requires dead-end branch memoization."));
+    if (preRotation_) {
+        preRotLabel_->setText(trUi("起手预旋转", "Pre-Rotation"));
+        preRotation_->setItemText(0, trUi("无预旋转（固定当前握法）", "None (Fixed initial grip)"));
+        preRotation_->setItemText(
+            1, trUi("水平预旋转 y/y2/y'（4 种朝向，底色在 D 面完成）",
+                    "Horizontal y/y2/y' (4 orientations, finishes on D)"));
+        preRotation_->setItemText(
+            2, trUi("全空间预旋转 x/y/z（24 种朝向，完成后底色在 D 面）",
+                    "Full 24-orientation x/y/z (24 orientations, finishes on D)"));
+        preRotNoteLabel_->setText(
+            trUi("（专为 Cross/XCross 设计：仅在起手前预转体，后续不转体）",
+                 "(For Cross/XCross: pre-rotates before first turn only)"));
+        const QString tip = trUi(
+            "专为 Cross/XCross 求解设计：在给定动作集合求解前，先尝试起手预旋转，仅发生在所有转动之前，后续不再转体，且严格保证完成后底色位于 D 底面：\n"
+            "• 水平预旋转 y/y2/y'（4 种）：起手仅水平转体，适合纯外层或双层转动；\n"
+            "• 全空间预旋转 x/y/z（24 种）：起手可 x/y/z 任意朝向，配合双层/中层转动（如 x' r U' r'）在完成时将底色中心刚好带回 D 底面！",
+            "Designed for Cross/XCross solving: tries initial pre-rotations before the first turn only, with no mid-solve rotations, while guaranteeing the bottom center finishes on physical D:\n"
+            "• Horizontal y/y2/y' (4): horizontal pre-rotation only;\n"
+            "• Full x/y/z (24): any spatial pre-rotation, allowing wide/slice moves (e.g. x' r U' r') to bring the bottom center onto D upon completion.");
+        preRotation_->setToolTip(tip);
+        preRotLabel_->setToolTip(tip);
+        preRotNoteLabel_->setToolTip(tip);
+    }
     updateButtonIcons();
 }
 
@@ -916,6 +968,12 @@ PatternRequest FormulaWindow::request() const {
     request.reject_alternating_triples = triples_->isChecked();
     request.memoize_dead_ends = memoize_->isChecked();
     request.quotient_free_rotations = rotationQuotient_->isChecked();
+    const int preIdx = preRotation_ ? preRotation_->currentIndex() : 0;
+    request.pre_rotation = preIdx == 1   ? PatternPreRotation::YOnly
+                           : preIdx == 2 ? PatternPreRotation::All24
+                                         : PatternPreRotation::None;
+    request.pre_rotate_y = (request.pre_rotation == PatternPreRotation::YOnly);
+    request.require_d_on_d = (request.pre_rotation != PatternPreRotation::None);
     request.heuristic = heuristic_->currentIndex() == 0   ? PatternHeuristic::Standard
                         : heuristic_->currentIndex() == 1 ? PatternHeuristic::Strong
                                                           : PatternHeuristic::None;

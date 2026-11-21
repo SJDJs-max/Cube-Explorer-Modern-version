@@ -239,6 +239,94 @@ int main() {
             bad = r; bad.max_symbol_uses[0] = -2;
             require(enumerate_pattern(bad).stop == PatternStop::InvalidInput, "Invalid max_symbol_uses was accepted");
         }
+        {
+            // Initial pre-rotation (pre_rotate_y) for Cross/XCross:
+            // Scramble "F' U F" is solved in 3 turns by "F' U' F", which is unreachable in 3 turns using <R, U, L> alone,
+            // but becomes "y' L' U' L" (or "y R' U' R") in 3 turns when initial y/y2/y' pre-rotation is allowed!
+            auto r = request("F' U F", "R R2 R' U U2 U' L L2 L'", 3);
+            r.modulo_u = false;
+            r.pre_rotate_y = false;
+            auto no_pre = enumerate_pattern(r); verified(r, no_pre);
+            require(no_pre.solutions.empty(), "F' U F should not be 3-move solvable in <R, U, L> without pre-rotation");
+
+            r.pre_rotate_y = true;
+            r.heuristic = PatternHeuristic::None;
+            auto with_pre_plain = enumerate_pattern(r); verified(r, with_pre_plain);
+            const auto plain_words = ordered_words(with_pre_plain);
+            require(std::ranges::find(plain_words, "y' R' U' R") != plain_words.end(),
+                    "pre_rotate_y missed y' R' U' R in <R, U, L>");
+            require(std::ranges::find(plain_words, "y L' U' L") != plain_words.end(),
+                    "pre_rotate_y missed y L' U' L in <R, U, L>");
+            for (const auto& s : with_pre_plain.solutions) {
+                for (std::size_t i = 1; i < s.moves.size(); ++i)
+                    require(!s.moves[i].is_rotation(), "pre_rotate_y emitted a mid-solve rotation when rotations were disabled");
+            }
+
+            r.heuristic = PatternHeuristic::Standard;
+            r.memoize_dead_ends = true;
+            auto with_pre_pruned = enumerate_pattern(r); verified(r, with_pre_pruned);
+            require(ordered_words(with_pre_plain) == ordered_words(with_pre_pruned),
+                    "pre_rotate_y heuristic pruning changed exact result set");
+
+            // Full 24-orientation pre-rotation (PatternPreRotation::All24):
+            // Scramble "D' R D" requires a D move without x/z pre-rotation, so it is unreachable in 3 moves inside <R, U, F>
+            // under None or YOnly, but becomes solvable in 3 turns (e.g. "x F' R' F" or "z' R' U' R") under All24!
+            auto r24 = request("D' R D", "R R2 R' U U2 U' F F2 F'", 3);
+            r24.modulo_u = false;
+            r24.pre_rotation = PatternPreRotation::YOnly;
+            auto y_only = enumerate_pattern(r24); verified(r24, y_only);
+            require(y_only.solutions.empty(), "D' R D should not be 3-move solvable in <R, U, F> with YOnly pre-rotation");
+
+            r24.pre_rotation = PatternPreRotation::All24;
+            r24.heuristic = PatternHeuristic::None;
+            auto all24_plain = enumerate_pattern(r24); verified(r24, all24_plain);
+            require(!all24_plain.solutions.empty(), "All24 pre-rotation failed to solve D' R D in 3 turns inside <R, U, F>");
+            for (const auto& s : all24_plain.solutions) {
+                bool seen_paid = false;
+                for (auto m : s.moves) {
+                    if (!m.is_rotation()) seen_paid = true;
+                    else require(!seen_paid, "All24 pre-rotation emitted a mid-solve rotation after a paid turn");
+                }
+            }
+            r24.heuristic = PatternHeuristic::Standard;
+            r24.memoize_dead_ends = true;
+            auto all24_pruned = enumerate_pattern(r24); verified(r24, all24_pruned);
+            require(ordered_words(all24_plain) == ordered_words(all24_pruned),
+                    "All24 pre-rotation heuristic pruning changed exact result set");
+
+            // All24 pre-rotation + require_d_on_d (Cross/XCross finishing with bottom color on physical D):
+            // 1. With outer moves only (<R, U, F>), "D' R D" cannot finish with D center on physical D if D is banned.
+            auto r24_d_outer = r24;
+            r24_d_outer.require_d_on_d = true;
+            auto d_outer = enumerate_pattern(r24_d_outer); verified(r24_d_outer, d_outer);
+            require(d_outer.solutions.empty(), "require_d_on_d failed to reject All24 outer-only solutions that left D center off D");
+
+            // 2. With wide moves (<r, R, U>): scramble "U' R' r' x" (3 paid turns: U' R' r', followed by x so start.frame == 0!)
+            // has inverse "x' r R U", and because r and R commute, its canonical deduplicated form in move_names order is "x' R r U",
+            // which starts with pre-rotation x' (temporarily moving D center to F) and then wide move r brings the D center right back onto physical D!
+            auto r_wide = request("U' R' r' x", "r r2 r' R R2 R' U U2 U'", 3);
+            r_wide.modulo_u = false;
+            r_wide.require_d_on_d = true;
+            r_wide.pre_rotation = PatternPreRotation::YOnly;
+            auto wide_y = enumerate_pattern(r_wide); verified(r_wide, wide_y);
+            require(wide_y.solutions.empty(), "U' R' r' x should not be solvable in 3 turns in <r, R, U> with YOnly pre-rotation");
+
+            r_wide.pre_rotation = PatternPreRotation::All24;
+            r_wide.heuristic = PatternHeuristic::None;
+            auto wide_24_plain = enumerate_pattern(r_wide); verified(r_wide, wide_24_plain);
+            const auto wide_words = ordered_words(wide_24_plain);
+            require(std::ranges::find(wide_words, "x' R r U") != wide_words.end(),
+                    "All24 + require_d_on_d missed wide-move solution 'x' R r U' that brings D center back to D");
+            for (const auto& s : wide_24_plain.solutions) {
+                require(logical_face(s.terminal.frame, Face::D) == Face::D,
+                        "All24 + require_d_on_d emitted a solution whose terminal D center is not on physical D");
+            }
+            r_wide.heuristic = PatternHeuristic::Standard;
+            r_wide.memoize_dead_ends = true;
+            auto wide_24_pruned = enumerate_pattern(r_wide); verified(r_wide, wide_24_pruned);
+            require(ordered_words(wide_24_plain) == ordered_words(wide_24_pruned),
+                    "All24 + require_d_on_d heuristic pruning changed exact result set");
+        }
         std::cout << "pattern tests: " << checks << " checks passed\n";
         return 0;
     } catch (const std::exception& e) {

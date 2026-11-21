@@ -19,6 +19,39 @@ using namespace cube;
 inline QString qstr(std::string_view s) {
     return QString::fromUtf8(s.data(), static_cast<qsizetype>(s.size()));
 }
+// Formats formula moves for GUI display: brackets any leading pre-rotation
+// (e.g. [y'], [x' y]) and any initial U / pre-AUF (e.g. [U], [y'] [U]) when
+// bracketInitial is true, without altering the underlying Move vector or costs.
+inline QString formatDisplayMoves(std::span<const Move> moves, bool bracketInitial) {
+    if (!bracketInitial)
+        return qstr(format_moves(moves, false));
+    std::string result;
+    std::size_t i = 0;
+    if (i < moves.size() && moves[i].is_rotation()) {
+        result += '[';
+        while (i < moves.size() && moves[i].is_rotation()) {
+            if (result.back() != '[')
+                result += ' ';
+            result += format_move(moves[i]);
+            ++i;
+        }
+        result += ']';
+    }
+    if (i < moves.size() && moves[i].symbol == 'U') {
+        if (!result.empty())
+            result += ' ';
+        result += '[';
+        result += format_move(moves[i]);
+        result += ']';
+        ++i;
+    }
+    for (; i < moves.size(); ++i) {
+        if (!result.empty())
+            result += ' ';
+        result += format_move(moves[i]);
+    }
+    return qstr(result);
+}
 inline std::filesystem::path fsPath(const QString &value) {
     return std::filesystem::path(value.toStdWString());
 }

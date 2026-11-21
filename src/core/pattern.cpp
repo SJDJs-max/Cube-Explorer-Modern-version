@@ -71,7 +71,9 @@ PatternState initial_state(const PatternRequest& r) {
     return start;
 }
 
-int goal_index(const PatternState& state, const std::vector<PatternState>& goals) {
+int goal_index(const PatternState& state, const std::vector<PatternState>& goals,
+               bool require_d_on_d = false, Face target_d = Face::D) {
+    if (require_d_on_d && logical_face(state.frame, Face::D) != target_d) return -1;
     for (std::size_t i = 0; i < goals.size(); ++i) if (matches(state, goals[i])) return static_cast<int>(i);
     return -1;
 }
@@ -112,6 +114,7 @@ AbstractMove abstract_move(const CubieState& delta, const std::array<std::uint8_
 struct AbstractMoves {
     std::uint8_t orbit_count = 1;
     std::array<std::int8_t, 24> orbit_of_frame{};
+    std::uint32_t goal_orbit_mask = 0xFFFFFFu;
     std::vector<std::vector<AbstractMove>> reverse_from_orbit;
     std::string key;
 };
@@ -125,7 +128,13 @@ std::string transform_key(const MoveTransform& t) {
     return key;
 }
 
-AbstractMoves project_moves(std::span<const Move> moves, std::uint8_t initial_frame, bool track_orbits = true) {
+PatternPreRotation effective_pre_rotation(const PatternRequest& r) noexcept {
+    if (r.pre_rotation != PatternPreRotation::None) return r.pre_rotation;
+    return r.pre_rotate_y ? PatternPreRotation::YOnly : PatternPreRotation::None;
+}
+
+AbstractMoves project_moves(std::span<const Move> moves, std::uint8_t initial_frame, bool track_orbits = true,
+                            PatternPreRotation pre_rot = PatternPreRotation::None, bool require_d_on_d = false) {
     // Track free-rotation equivalence classes (orbits) of reachable holding
     // frames whenever track_orbits is true. Every free rotation stays inside
     // the same orbit at cost 0, and every paid move transitions from
@@ -133,8 +142,18 @@ AbstractMoves project_moves(std::span<const Move> moves, std::uint8_t initial_fr
     // orbit-product graph remain 100% admissible lower bounds while avoiding
     // the severe bound collapse of merging wide-turn frames into all 18 outer moves.
     AbstractMoves result;
+    const Face target_d = logical_face(initial_frame, Face::D);
     std::array<bool, 24> reached{};
     std::vector<std::uint8_t> frames{initial_frame}; reached[initial_frame] = true;
+    if (pre_rot == PatternPreRotation::YOnly) {
+        for (std::uint8_t p = 1; p <= 3; ++p) {
+            const auto nf = rotated_frame(initial_frame, Move{'y', p});
+            if (!reached[nf]) { reached[nf] = true; frames.push_back(nf); }
+        }
+    } else if (pre_rot == PatternPreRotation::All24) {
+        for (std::uint8_t f = 0; f < 24; ++f)
+            if (!reached[f]) { reached[f] = true; frames.push_back(f); }
+    }
     for (std::size_t head = 0; head < frames.size(); ++head) for (auto m : moves) {
         const auto next = move_transform(frames[head], m).next_frame;
         if (!reached[next]) { reached[next] = true; frames.push_back(next); }
@@ -162,6 +181,17 @@ AbstractMoves project_moves(std::span<const Move> moves, std::uint8_t initial_fr
         result.orbit_count = std::max<std::uint8_t>(1, next_orbit);
         if (result.orbit_count == 1) result.orbit_of_frame.fill(0);
     }
+    if (require_d_on_d) {
+        result.goal_orbit_mask = 0;
+        for (int f = 0; f < 24; ++f) {
+            if (reached[f] && logical_face(static_cast<std::uint8_t>(f), Face::D) == target_d) {
+                const int o = result.orbit_of_frame[f];
+                if (o >= 0) result.goal_orbit_mask |= (1u << o);
+            }
+        }
+    } else {
+        result.goal_orbit_mask = (1u << result.orbit_count) - 1u;
+    }
     result.reverse_from_orbit.resize(result.orbit_count);
     std::unordered_set<std::string> seen;
     std::vector<std::string> sorted;
@@ -182,6 +212,7 @@ AbstractMoves project_moves(std::span<const Move> moves, std::uint8_t initial_fr
     }
     std::sort(sorted.begin(), sorted.end());
     result.key += static_cast<char>(result.orbit_count);
+    for (int i = 0; i < 3; ++i) result.key += static_cast<char>((result.goal_orbit_mask >> (8 * i)) & 255);
     for (auto o : result.orbit_of_frame) result.key += static_cast<char>(o + 1);
     for (int i = 0; i < 4; ++i) result.key += static_cast<char>((sorted.size() >> (8 * i)) & 255);
     for (auto& key : sorted) result.key += key;
@@ -325,6 +356,7 @@ struct GroupBound final : Bound {
         for (const auto& goal : goals) {
             const auto base = seed_index(goal);
             for (std::uint8_t o = 0; o < orbit_count; ++o) {
+                if (!(moves.goal_orbit_mask & (1u << o))) continue;
                 const auto seed = base * orbit_count + o;
                 if (distance[seed] == 255) { distance[seed] = 0; queue.push_back(seed); }
             }
@@ -386,6 +418,7 @@ struct OrientationBound final : Bound {
         std::vector<std::uint32_t> queue; queue.reserve(distance.size());
         auto seed = [&](std::uint32_t base_i) {
             for (std::uint8_t o = 0; o < orbit_count; ++o) {
+                if (!(moves.goal_orbit_mask & (1u << o))) continue;
                 const auto i = base_i * orbit_count + o;
                 if (distance[i] == 255) { distance[i] = 0; queue.push_back(i); }
             }
@@ -448,6 +481,7 @@ struct CenterBound final : Bound {
         for (const auto& goal : goals) {
             const auto base = seed_index(goal);
             for (std::uint8_t o = 0; o < orbit_count; ++o) {
+                if (!(moves.goal_orbit_mask & (1u << o))) continue;
                 const auto i = base * orbit_count + o;
                 if (distance[i] == 255) { distance[i] = 0; queue.push_back(i); }
             }
@@ -483,9 +517,10 @@ std::vector<std::shared_ptr<const Bound>> make_bounds(const PatternRequest& r,
         const std::vector<PatternState>& goals, Control& control) {
     std::vector<std::shared_ptr<const Bound>> bounds;
     if (r.heuristic == PatternHeuristic::None) return bounds;
-    const auto orbit_moves = project_moves(r.allowed_moves, r.pattern.frame, true);
+    const auto pre_rot = effective_pre_rotation(r);
+    const auto orbit_moves = project_moves(r.allowed_moves, r.pattern.frame, true, pre_rot, r.require_d_on_d);
     const auto collapsed_moves =
-        orbit_moves.orbit_count > 1 ? project_moves(r.allowed_moves, r.pattern.frame, false) : orbit_moves;
+        orbit_moves.orbit_count > 1 ? project_moves(r.allowed_moves, r.pattern.frame, false, pre_rot, r.require_d_on_d) : orbit_moves;
     static constexpr std::size_t max_orbit_entries = 3'500'000;
     const std::size_t high_gen_limit = pattern_high_gen_entry_limit();
     std::array<bool, 18> paid_sym_seen{};
@@ -1017,6 +1052,7 @@ struct Search {
     std::vector<std::shared_ptr<const Bound>> bounds;
     std::shared_ptr<FastCursorTable> fast_table = std::make_shared<FastCursorTable>();
     std::array<std::vector<RotationPath>, 24> rotations;
+    std::vector<RotationPath> root_rotations;
     struct PaidTransition {
         Move move;
         const MoveTransform* transform;
@@ -1042,10 +1078,12 @@ struct Search {
     int used_rotations = 0;
     std::array<int, 18> used_symbols{};
     bool can_memoize = false;
+    Face target_d_ = Face::D;
     WorkerContext* worker_ = nullptr;
 
     Search(const PatternRequest& r, PatternReport& result, Control& ctl, const std::vector<PatternState>& targets)
-        : request(r), report(result), control(ctl), goals(targets) {
+        : request(r), report(result), control(ctl), goals(targets),
+          target_d_(logical_face(r.pattern.frame, Face::D)) {
         for (std::uint8_t s = 0; s < 18; ++s)
             if (r.max_symbol_uses[s] >= 0) constrained_symbols.push_back(s);
         can_memoize = r.memoize_dead_ends && constrained_symbols.size() <= 8;
@@ -1056,12 +1094,16 @@ struct Search {
     Search(const Search& proto, WorkerContext& worker)
         : request(proto.request), report(proto.report), control(proto.control), goals(proto.goals),
           bounds(proto.bounds), fast_table(proto.fast_table), rotations(proto.rotations),
-          paid_transitions(proto.paid_transitions), paid_moves(proto.paid_moves),
-          redundant_root_u(proto.redundant_root_u), allowed(proto.allowed),
+          root_rotations(proto.root_rotations), paid_transitions(proto.paid_transitions),
+          paid_moves(proto.paid_moves), redundant_root_u(proto.redundant_root_u), allowed(proto.allowed),
           quotient_rotations(proto.quotient_rotations), canonical_effects(proto.canonical_effects),
           prove_minimum(proto.prove_minimum), constrained_symbols(proto.constrained_symbols),
-          can_memoize(proto.can_memoize), worker_(&worker) {
+          can_memoize(proto.can_memoize), target_d_(proto.target_d_), worker_(&worker) {
         if (can_memoize) dead_ends.resize(1u << 16);
+    }
+
+    int match_goal(const PatternState& state) const {
+        return goal_index(state, goals, request.require_d_on_d, target_d_);
     }
 
     DeadEntry dead_key(const PatternState& state, int remaining, bool root) const {
@@ -1111,6 +1153,19 @@ struct Search {
             if (result > cutoff) return result;
         }
         return result;
+    }
+
+    int root_lower_bound(const PatternState& state, int cutoff = std::numeric_limits<int>::max()) const {
+        if (root_rotations.size() <= 1) return lower_bound(state, cutoff);
+        int best = std::numeric_limits<int>::max();
+        for (const auto& rotation : root_rotations) {
+            if (!rotation_within_limits(rotation)) continue;
+            auto oriented = state;
+            oriented.frame = rotation.frame;
+            best = std::min(best, lower_bound(oriented, cutoff));
+            if (best == 0) break;
+        }
+        return best;
     }
 
     void check_control() {
@@ -1330,7 +1385,7 @@ struct Search {
         auto first = [&](auto&& self, const PatternState& state, int paid,
                 std::size_t rotation_begin, std::uint8_t rotation_frame) -> bool {
             if ((++probes & 1023) == 0) check_control();
-            if (candidate.size() == size) return !candidate.back().is_rotation() && goal_index(state, goals) >= 0;
+            if (candidate.size() == size) return !candidate.back().is_rotation() && match_goal(state) >= 0;
             int previous_id = -1;
             for (auto i : order) {
                 if (used[i] || ids[i] == previous_id) continue;
@@ -1340,7 +1395,8 @@ struct Search {
                 if (!move.is_rotation()) {
                     const auto segment = std::span<const Move>(candidate).subspan(rotation_begin);
                     bool valid_segment = false;
-                    for (const auto& rotation : rotations[rotation_frame])
+                    const auto& rot_list = rotation_begin == 0 ? root_rotations : rotations[rotation_frame];
+                    for (const auto& rotation : rot_list)
                         if (std::ranges::equal(segment, rotation.moves)) { valid_segment = true; break; }
                     if (!valid_segment || redundant_same_symbol(candidate, move)) continue;
                     if (violates_banned_commuting_triple(candidate, move)) continue;
@@ -1352,12 +1408,13 @@ struct Search {
                 if (move.is_rotation()) {
                     const auto segment = std::span<const Move>(candidate).subspan(rotation_begin);
                     valid = false;
-                    for (const auto& rotation : rotations[rotation_frame])
+                    const auto& rot_list = rotation_begin == 0 ? root_rotations : rotations[rotation_frame];
+                    for (const auto& rotation : rot_list)
                         if (rotation.moves.size() >= segment.size() &&
                             std::equal(segment.begin(), segment.end(), rotation.moves.begin())) { valid = true; break; }
                 }
                 const auto next = apply_pattern(state, move);
-                if (!move.is_rotation() && candidate.size() < size && goal_index(next, goals) >= 0) valid = false;
+                if (!move.is_rotation() && candidate.size() < size && match_goal(next) >= 0) valid = false;
                 if (valid) {
                     used[i] = true;
                     if (self(self, next, paid + move.turn_cost(), move.is_rotation() ? rotation_begin : candidate.size(),
@@ -1396,7 +1453,7 @@ struct Search {
 
     bool visit(const PatternState& state, const CursorState& cursor, int turns, int bound) {
         count_node();
-        const int goal = goal_index(state, goals);
+        const int goal = match_goal(state);
         if (goal >= 0) {
             // A goal is terminal even below min_turns: never leave a solved
             // (or modulo-U solved) state just to pad an enumerated formula.
@@ -1405,7 +1462,7 @@ struct Search {
         }
         const int remaining = bound - turns;
         if (turns >= bound) return false;
-        if (turns == 0 && lower_bound(state, remaining) > remaining) return false;
+        if (turns == 0 && root_lower_bound(state, remaining) > remaining) return false;
         const bool use_dead = !dead_ends.empty() && remaining >= 2;
         DeadEntry key;
         if (use_dead) {
@@ -1416,7 +1473,8 @@ struct Search {
         if (quotient_rotations && turns > 0 && !canonical_completion_exists(state, remaining)) return false;
         const int next_rem = remaining - 1;
         bool has_completion = false;
-        for (const auto& rotation : rotations[state.frame]) {
+        const auto& active_rotations = turns == 0 ? root_rotations : rotations[state.frame];
+        for (const auto& rotation : active_rotations) {
             if (!rotation_within_limits(rotation)) continue;
             const auto old_size = path.size();
             path.insert(path.end(), rotation.moves.begin(), rotation.moves.end());
@@ -1467,10 +1525,10 @@ struct Search {
             int used_rot = 0;
             std::array<int, 18> used_sym{};
         };
-        const int frontier_depth = (rotations[start.frame].size() > 1) ? 1 : 2;
+        const int frontier_depth = (root_rotations.size() > 1) ? 1 : 2;
         std::vector<FrontierTask> tasks;
         count_node();
-        for (const auto& rotation : rotations[start.frame]) {
+        for (const auto& rotation : root_rotations) {
             if (!rotation_within_limits(rotation)) continue;
             push_rotation_usage(rotation);
             auto oriented = start;
@@ -1499,7 +1557,7 @@ struct Search {
                     continue;
                 }
                 count_node();
-                if (goal_index(child1, goals) < 0) {
+                if (match_goal(child1) < 0) {
                     for (const auto& rot1 : rotations[child1.frame]) {
                         if (!rotation_within_limits(rot1)) continue;
                         push_rotation_usage(rot1);
@@ -1784,7 +1842,17 @@ Validation verify_pattern_solution(const PatternRequest& request, const PatternS
             return {false, "Result exceeds a per-symbol maximum move count."};
     std::array<bool, 54> allowed{};
     for (auto m : request.allowed_moves) allowed[move_index(m)] = true;
-    for (auto m : solution.moves) if (!allowed[move_index(m)]) return {false, "Result contains a disabled action."};
+    const auto pre_rot = effective_pre_rotation(request);
+    std::size_t leading_rotations = 0;
+    while (leading_rotations < solution.moves.size() && solution.moves[leading_rotations].is_rotation())
+        ++leading_rotations;
+    for (std::size_t i = 0; i < solution.moves.size(); ++i) {
+        const auto m = solution.moves[i];
+        const bool legal_pre_rot =
+            (pre_rot == PatternPreRotation::YOnly && i == 0 && leading_rotations == 1 && m.symbol == 'y') ||
+            (pre_rot == PatternPreRotation::All24 && i < leading_rotations && leading_rotations <= 2 && m.is_rotation());
+        if (!allowed[move_index(m)] && !legal_pre_rot) return {false, "Result contains a disabled action."};
+    }
     for (std::size_t i = 0; i < solution.moves.size(); ++i) {
         const auto m = solution.moves[i];
         const auto prefix = std::span<const Move>(solution.moves.data(), i);
@@ -1806,12 +1874,13 @@ Validation verify_pattern_solution(const PatternRequest& request, const PatternS
     }
     const auto start = initial_state(request);
     const auto goals = make_goals(request);
+    const Face target_d = logical_face(request.pattern.frame, Face::D);
     static const VerificationGeometry independent;
     auto geometry = independent.frames[start.frame].identity;
     PatternState replay = start;
     bool paid = false;
     for (auto move : solution.moves) {
-        if (goal_index(replay, goals) >= 0) return {false, "Result continues after its first modulo-U goal."};
+        if (goal_index(replay, goals, request.require_d_on_d, target_d) >= 0) return {false, "Result continues after its first modulo-U goal."};
         if (!move.is_rotation()) {
             if (!paid && move.symbol == 'U' && request.modulo_u && request.remove_u_symmetric_prefix &&
                 logical_face(replay.frame, Face::U) == Face::U && u_conjugation_invariant(request.pattern, move.power))
@@ -1822,6 +1891,8 @@ Validation verify_pattern_solution(const PatternRequest& request, const PatternS
         replay = independent.decode(geometry, start);
     }
     if (replay != solution.terminal) return {false, "Geometric replay disagrees with the search terminal state."};
+    if (request.require_d_on_d && logical_face(replay.frame, Face::D) != target_d)
+        return {false, "Geometric replay does not place the bottom center on physical D."};
     if (solution.residual_u < 0 || solution.residual_u >= static_cast<int>(goals.size()) || !matches(replay, goals[solution.residual_u]))
         return {false, "Geometric replay does not meet the requested target."};
     return {};
@@ -1864,6 +1935,35 @@ PatternReport enumerate_pattern(const PatternRequest& request, PatternSolutionCa
             }
         }
         search.rotations = rotation_closures(effective_allowed);
+        search.root_rotations = search.rotations[start.frame];
+        const auto pre_rot = effective_pre_rotation(request);
+        if (pre_rot == PatternPreRotation::YOnly) {
+            std::array<bool, 24> seen_frames{};
+            for (const auto& r : search.root_rotations) seen_frames[r.frame] = true;
+            for (std::uint8_t p = 1; p <= 3; ++p) {
+                const Move ym{'y', p};
+                const auto nf = rotated_frame(start.frame, ym);
+                if (!seen_frames[nf]) {
+                    seen_frames[nf] = true;
+                    search.root_rotations.push_back({nf, {ym}});
+                }
+            }
+        } else if (pre_rot == PatternPreRotation::All24) {
+            static const std::array<Move, 9> all_rots = {{
+                {'x', 1}, {'x', 2}, {'x', 3},
+                {'y', 1}, {'y', 2}, {'y', 3},
+                {'z', 1}, {'z', 2}, {'z', 3},
+            }};
+            static const auto full_closures = rotation_closures(all_rots);
+            std::array<bool, 24> seen_frames{};
+            for (const auto& r : search.root_rotations) seen_frames[r.frame] = true;
+            for (const auto& r : full_closures[start.frame]) {
+                if (!seen_frames[r.frame]) {
+                    seen_frames[r.frame] = true;
+                    search.root_rotations.push_back(r);
+                }
+            }
+        }
         // Assign dense effect IDs to unique paid transforms for O(1) incremental cursors.
         std::unordered_map<std::string, std::uint32_t> effect_ids;
         std::vector<MoveTransform> forward_transforms;
@@ -1878,7 +1978,8 @@ PatternReport enumerate_pattern(const PatternRequest& request, PatternSolutionCa
             }
         }
         const bool has_usage_limits = request.max_rotations >= 0 || !search.constrained_symbols.empty();
-        search.quotient_rotations = !has_usage_limits && request.memoize_dead_ends && request.quotient_free_rotations &&
+        search.quotient_rotations = !has_usage_limits && !request.require_d_on_d && request.memoize_dead_ends &&
+            request.quotient_free_rotations &&
             can_quotient_free_rotations(effective_allowed, start.frame, search.rotations);
         report.free_rotation_quotient = search.quotient_rotations;
         if (search.quotient_rotations) {
@@ -1894,7 +1995,7 @@ PatternReport enumerate_pattern(const PatternRequest& request, PatternSolutionCa
             report.root_u_symmetric = search.redundant_root_u[1];
         }
         control.check(true);
-        if (goal_index(start, goals) < 0 && request.max_turns != 0 && !search.paid_moves.empty()) {
+        if (search.match_goal(start) < 0 && request.max_turns != 0 && !search.paid_moves.empty()) {
             // Pass effective_allowed when building bounds if zero-budget symbols/rotations were stripped.
             PatternRequest bound_req = request;
             bound_req.allowed_moves = effective_allowed;
@@ -1905,10 +2006,10 @@ PatternReport enumerate_pattern(const PatternRequest& request, PatternSolutionCa
         }
         report.preparation_time = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - control.start);
         control.preparing = false;
-        const int lower = search.lower_bound(start);
+        const int lower = search.root_lower_bound(start);
         const CursorState root_cursor = search.fast_table->make_cursor(start);
         search.prove_minimum = request.min_turns <= lower;
-        if (goal_index(start, goals) >= 0) {
+        if (search.match_goal(start) >= 0) {
             control.depth = 0;
             control.check(true, true);
             search.visit(start, root_cursor, 0, 0);

@@ -1240,7 +1240,7 @@ class MainWindow final : public QMainWindow {
                 text += "<article><img src='data:image/png;base64," + QString::fromLatin1(bytes.toBase64()) +
                         "'><div><h3>" + row->patternName().toHtmlEscaped() + "</h3><p>" +
                         (row->generated() ? "Generator" : "Solver") + "</p><code>" +
-                        (d ? qstr(format_moves(d->moves, d->formula)).toHtmlEscaped() : "尚未运行") +
+                        (d ? formatDisplayMoves(d->moves, d->formula).toHtmlEscaped() : "尚未运行") +
                         "</code>" +
                         (d ? QString("<p>%1 步%2</p>").arg(d->turns).arg(d->optimalityProven ? " · 最优" : "")
                            : QString{}) +
@@ -1925,8 +1925,10 @@ class MainWindow final : public QMainWindow {
         restore(dialog.built()->pattern);
         if (dialog.openSolver()) {
             auto *win = openFormula(dialog.built()->pattern, false);
-            if (win)
+            if (win) {
                 win->setModuloU(false);
+                win->setPreRotationMode(dialog.preRotationMode());
+            }
         }
     }
     void resetEditor(editor::Reset reset, editor::Pieces pieces = editor::Pieces::All) {
