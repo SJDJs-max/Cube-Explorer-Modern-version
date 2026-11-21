@@ -62,11 +62,12 @@ A modernized **C++20 + Qt 6** Windows desktop Rubik's Cube solver and algorithm-
   - Advanced settings include a full **18×3 (54-move) Fine Moves Matrix** dialog and a **Max Rotations** cap (automatically enabled when rotations are checked).
 
 ### 4. Modern Desktop UI & Speedcubing Utilities
-- **Dark/Light Theme & Instant Chinese/English Toggle** with proportional HiDPI scaling and custom vector Qt styling.
-- **Classic / 2D Net / 3D Cube Views** (corrected 3D Y-axis orbit drag; camera-only rotation without mutating stickers).
+- **Dark/Light Theme & Instant Chinese/English Toggle (with Bilingual Offline Help)**: proportional HiDPI scaling, custom vector Qt styling, and `F1` offline help synced to the active UI language.
+- **Classic / 2D Net / 3D Cube Views with Live Left-Pane Sync**: result thumbnails automatically follow the main view mode, and orbiting or resetting the main 3D cube rotates all left-pane 3D thumbnails in real time (camera-only without mutating stickers).
+- **Flexible Formula Input & Inverse Button**: accepts spaceless formulas (`RUR'U'` = `R U R' U'`), prime-before-2 half turns (`R'2` / `r'2` / `Rw'2`), and Unicode quotes/fullwidth symbols, with a one-click **Inv** button right beside the input box.
+- **Customizable Keyboard Shortcuts**: *Options → Keyboard Shortcuts…* supports rebinding with conflict detection (`Ctrl+Enter` to apply formula anywhere, `Ctrl+Shift+Enter` for inverse, `F2` cycle view, `F5`/`F6` solve/generate, etc.).
 - **One-Click Speedcubing Presets**: **ZBLS** (grey U layer + Ctrl orientation markers on the 4 U edges), **OLL**, **F2L**, and **OLLCP / COLL**.
 - **Cross Quick Solver**: choose any of the 6 bottom colors and freely toggle 0–4 F2L slots (`BL / BR / FL / FR` covering Cross / XC / XXC / XXXC / Full F2L); automatically rotates the chosen bottom color to physical `D` with `Mod-U` disabled.
-- **Inverse Formula Button**: one-click inverse application right beside the formula input box for fast setups.
 
 ### 5. CPU / Memory Protection & MCP AI Integration
 - **3-Tier Performance Profile** (`Options → Performance`): **Quiet (~50% cores)**, **Balanced (Default, reserves 1–2 cores + below-normal thread priority)**, and **Full Speed**, plus physical-RAM-adaptive pruning-table cache limits.

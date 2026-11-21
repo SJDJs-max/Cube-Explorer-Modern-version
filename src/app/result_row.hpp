@@ -73,7 +73,7 @@ class ResultRow final : public QFrame {
     void setBusy(bool busy) {
         busy_ = busy;
         run_->setIcon(runIcon(busy, uiScale_));
-        run_->setToolTip(busy ? "停止搜索" : "继续寻找下一条公式");
+        run_->setToolTip(busy ? trUi("停止搜索", "Stop search") : trUi("继续寻找下一条公式", "Find next solution"));
         if (onBusy)
             onBusy();
     }
@@ -273,7 +273,7 @@ class ResultRow final : public QFrame {
             render();
         });
         setUiScale(1.0);
-        render();
+        retranslateUi();
     }
     ~ResultRow() override {
         stop();
@@ -345,7 +345,7 @@ class ResultRow final : public QFrame {
             setSelected(false);
         }
         thumbnail_->setPattern(input_);
-        setStatus("状态：尚未运行");
+        setStatus(trUi("状态：尚未运行", "Status: Idle"));
     }
     void invertInput() {
         if (formula_)
@@ -427,9 +427,13 @@ class ResultRow final : public QFrame {
                                      : CubeCanvas::View::Classic;
         setViewMode(view);
     }
+    void setCamera(double yaw, double pitch, double zoom = 1.0) {
+        thumbnail_->setCamera(yaw, pitch, zoom);
+        update();
+    }
     void setFormulaResult(ResultData data) {
         ordinary_ = std::move(data);
-        setStatus(QString("已验证 · %1 步").arg(ordinary_->turns));
+        setStatus(trUi("已验证 · %1 步", "Verified · %1 moves").arg(ordinary_->turns));
         render();
     }
     std::optional<ResultData> result(bool bestAvailable = false) const {
@@ -466,14 +470,15 @@ class ResultRow final : public QFrame {
             optimalBox_->setChecked(true);
         } else
             ordinary_ = data;
-        setStatus(data.optimalityProven ? "已验证 · 已证明最优 (*)" : "已验证 · 从文件载入");
+        setStatus(data.optimalityProven ? trUi("已验证 · 已证明最优 (*)", "Verified · Optimal proven (*)")
+                                        : trUi("已验证 · 从文件载入", "Verified · Loaded from file"));
         render();
     }
     void stop() {
         if (busy_) {
             worker_.request_stop();
-            run_->setToolTip("正在停止…");
-            setStatus("正在停止…");
+            run_->setToolTip(trUi("正在停止…", "Stopping…"));
+            setStatus(trUi("正在停止…", "Stopping…"));
         }
     }
     void start(TwoPhaseOptions options, OptimalOptions optimum) {

@@ -80,7 +80,13 @@ void CubeCanvas::setColors(const std::array<QColor,6>& colors) {std::copy(colors
 void CubeCanvas::setEditable(bool editable) {editable_=editable;if(!editable)hovered_=-1;setCursor(Qt::ArrowCursor);update();}
 void CubeCanvas::setShowFaceLabels(bool show) {labels_=show;update();}
 void CubeCanvas::setDrawingMargin(double pixels) {drawingMargin_=pixels;invalidateGeometry();}
-void CubeCanvas::resetCamera() {yaw_=30;pitch_=35;zoom_=1;invalidateGeometry();}
+void CubeCanvas::setCamera(double yaw, double pitch, double zoom) {
+    yaw_=yaw;pitch_=std::clamp(pitch,-85.0,85.0);zoom_=std::clamp(zoom,.65,1.15);invalidateGeometry();
+}
+void CubeCanvas::resetCamera() {
+    yaw_=30;pitch_=35;zoom_=1;invalidateGeometry();
+    if(onCameraChanged)onCameraChanged(yaw_,pitch_,zoom_);
+}
 void CubeCanvas::invalidateGeometry() {geometryDirty_=true;update();}
 
 void CubeCanvas::refreshCenterDirections() {
@@ -322,7 +328,9 @@ void CubeCanvas::mouseMoveEvent(QMouseEvent* event) {
             // Subtract delta.x so dragging right rotates the front face right
             // around the vertical Y axis, matching natural hand/cursor motion.
             yaw_-=delta.x()*.5;pitch_=std::clamp(pitch_+delta.y()*.5,-85.0,85.0);
-            previousPosition_=event->position();hovered_=-1;setCursor(Qt::ClosedHandCursor);invalidateGeometry();event->accept();return;
+            previousPosition_=event->position();hovered_=-1;setCursor(Qt::ClosedHandCursor);invalidateGeometry();
+            if(onCameraChanged)onCameraChanged(yaw_,pitch_,zoom_);
+            event->accept();return;
         }
     }
     previousPosition_=event->position();const int index=stickerAt(event->position());
@@ -332,5 +340,7 @@ void CubeCanvas::mouseMoveEvent(QMouseEvent* event) {
 void CubeCanvas::leaveEvent(QEvent* event) {hovered_=-1;update();QWidget::leaveEvent(event);}
 void CubeCanvas::wheelEvent(QWheelEvent* event) {
     if(view_!=View::Cube3D) {event->ignore();return;}
-    zoom_=std::clamp(zoom_*std::pow(1.001,event->angleDelta().y()),.65,1.15);invalidateGeometry();event->accept();
+    zoom_=std::clamp(zoom_*std::pow(1.001,event->angleDelta().y()),.65,1.15);invalidateGeometry();
+    if(onCameraChanged)onCameraChanged(yaw_,pitch_,zoom_);
+    event->accept();
 }

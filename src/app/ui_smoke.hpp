@@ -604,6 +604,29 @@ inline void runUiSmoke(MainWindow &window, QApplication &app, const QString &scr
                         auto *addedIn3d = window.addOrdinary(pattern_from_cube(CubeState{}), false);
                         check(addedIn3d->thumbnail()->view() == CubeCanvas::View::Cube3D,
                               "Newly added result rows must inherit active view mode");
+                        {
+                            // Dragging the main 3D cube must rotate left-pane thumbnails in sync.
+                            auto *mainCanvas = window.canvas();
+                            const QPointF start = mainCanvas->rect().center();
+                            const QPointF end = start + QPointF(60, -24);
+                            QMouseEvent down(QEvent::MouseButtonPress, start, mainCanvas->mapToGlobal(start),
+                                             Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+                            QApplication::sendEvent(mainCanvas, &down);
+                            QMouseEvent move(QEvent::MouseMove, end, mainCanvas->mapToGlobal(end),
+                                             Qt::NoButton, Qt::LeftButton, Qt::NoModifier);
+                            QApplication::sendEvent(mainCanvas, &move);
+                            QMouseEvent up(QEvent::MouseButtonRelease, end, mainCanvas->mapToGlobal(end),
+                                           Qt::LeftButton, Qt::NoButton, Qt::NoModifier);
+                            QApplication::sendEvent(mainCanvas, &up);
+                            check(std::abs(addedIn3d->thumbnail()->yaw() - mainCanvas->yaw()) < 1e-6 &&
+                                      std::abs(addedIn3d->thumbnail()->pitch() - mainCanvas->pitch()) < 1e-6 &&
+                                      std::abs(mainCanvas->yaw() - 30.0) > 1.0,
+                                  "Left-pane 3D thumbnails must follow main 3D drag camera");
+                            mainCanvas->resetCamera();
+                            check(std::abs(addedIn3d->thumbnail()->yaw() - 30.0) < 1e-6 &&
+                                      std::abs(addedIn3d->thumbnail()->pitch() - 35.0) < 1e-6,
+                                  "Resetting main 3D camera must reset left-pane thumbnails too");
+                        }
                         window.setView(0);
                         window.restore(pattern_from_cube(CubeState{}));
                         window.applyFormula("RUR'U'R'2");

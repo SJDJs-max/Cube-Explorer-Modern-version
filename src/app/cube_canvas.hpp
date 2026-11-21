@@ -31,6 +31,10 @@ public:
     // A negative value restores the normal editor/thumbnail margin.
     void setDrawingMargin(double pixels);
     void resetCamera();
+    void setCamera(double yaw, double pitch, double zoom = 1.0);
+    [[nodiscard]] double yaw() const noexcept { return yaw_; }
+    [[nodiscard]] double pitch() const noexcept { return pitch_; }
+    [[nodiscard]] double zoom() const noexcept { return zoom_; }
 
     // These use the same polygons as painting and are also used in UI tests.
     [[nodiscard]] int stickerAt(QPointF position) const;
@@ -40,6 +44,7 @@ public:
 
     std::function<void(int, Qt::MouseButton, Qt::KeyboardModifiers)> onSticker;
     std::function<void(Qt::MouseButton, Qt::KeyboardModifiers)> onBackground;
+    std::function<void(double, double, double)> onCameraChanged;
 
 protected:
     void paintEvent(QPaintEvent*) override;

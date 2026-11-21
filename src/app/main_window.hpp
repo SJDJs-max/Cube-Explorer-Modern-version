@@ -209,8 +209,9 @@ class MainWindow final : public QMainWindow {
         if (formulaPanel_ && formulaPanel_->busy())
             ++running;
         statusBar()->showMessage(
-            running ? QString("%1 个搜索正在运行").arg(running)
-                    : "左键染色 · Shift＋左键忽略朝向 · Ctrl＋左键仅朝向 · 右键清空单个贴纸 · 中心左键取色");
+            running ? trUi("%1 个搜索正在运行", "%1 search(es) running").arg(running)
+                    : trUi("左键染色 · Shift＋左键忽略朝向 · Ctrl＋左键仅朝向 · 右键清空单个贴纸 · 中心左键取色",
+                           "Left: paint · Shift+Left: ignore ori · Ctrl+Left: ori only · Right: clear · Center: pick color"));
         pumpGenerators();
     }
     void pumpGenerators() {
@@ -378,12 +379,14 @@ class MainWindow final : public QMainWindow {
                      "Apply the inverse of the entered formula (handy for setup/undo)"));
         }
         if (formulaInput_) {
+            formulaInput_->setPlaceholderText(trUi("R U R' U' 或 RUR'U'", "R U R' U' / RUR'U'"));
             const auto hint = shortcutHintText("apply_formula");
-            formulaInput_->setPlaceholderText(
+            formulaInput_->setToolTip(
                 hint.isEmpty()
-                    ? trUi("例如：R U R' U' 或 RUR'U'（回车应用）", "e.g. R U R' U' or RUR'U' (Enter to apply)")
-                    : trUi("例如：R U R' U' 或 RUR'U'（回车 / %1 应用）",
-                           "e.g. R U R' U' or RUR'U' (Enter / %1)")
+                    ? trUi("输入公式（支持无空格及 R'2，按 Enter 应用）",
+                           "Enter formula (supports spaceless & R'2; Enter to apply)")
+                    : trUi("输入公式（支持无空格及 R'2，按 Enter 或 %1 应用）",
+                           "Enter formula (supports spaceless & R'2; Enter or %1 to apply)")
                           .arg(hint));
         }
         refreshShortcutHints();
@@ -425,6 +428,11 @@ class MainWindow final : public QMainWindow {
                       : trUi("切换到夜晚模式", "Switch to Dark Mode"));
             themeToggle_->setAccessibleName(themeToggle_->toolTip());
         }
+        for (auto *button : right_->findChildren<QPushButton *>())
+            if (dynamic_cast<MoveButton *>(button))
+                button->setToolTip(
+                    trUi("左键：顺时针 90°；右键：逆时针 90°。半转可连按两次，或输入 2。",
+                         "Left click: CW 90°; Right click: CCW 90°. Click twice or type 2 for half turns."));
         if (editorView_)
             editorView_->retranslateUi();
         for (auto *row : rows_)
@@ -754,6 +762,7 @@ class MainWindow final : public QMainWindow {
         row->setNumber(static_cast<int>(rows_.size()));
         row->setAppearance(dark_, colors_);
         row->setViewMode(currentView_);
+        row->setCamera(editorView_->canvas()->yaw(), editorView_->canvas()->pitch(), 1.0);
         row->setUiScale(uiScale_);
         row->onSelect = [this](ResultRow *row, Qt::KeyboardModifiers mods) { selectRow(row, mods); };
         row->onContext = [this](ResultRow *row, QPoint position) { rowMenu(row, position); };
@@ -1601,8 +1610,16 @@ class MainWindow final : public QMainWindow {
             if (currentView_ >= 0 && currentView_ < static_cast<int>(viewActions_.size()))
                 viewActions_[currentView_]->setChecked(true);
             preferences_.setValue("Appearance/View", currentView_);
-            for (auto *row : rows_)
+            const double yaw = editorView_->canvas()->yaw();
+            const double pitch = editorView_->canvas()->pitch();
+            for (auto *row : rows_) {
                 row->setViewMode(currentView_);
+                row->setCamera(yaw, pitch, 1.0);
+            }
+        };
+        editorView_->canvas()->onCameraChanged = [this](double yaw, double pitch, double) {
+            for (auto *row : rows_)
+                row->setCamera(yaw, pitch, 1.0);
         };
         layout->addWidget(editorView_);
 
@@ -2255,8 +2272,12 @@ class MainWindow final : public QMainWindow {
         editorView_->setView(currentView_);
         viewActions_.at(currentView_)->setChecked(true);
         preferences_.setValue("Appearance/View", currentView_);
-        for (auto *row : rows_)
+        const double yaw = editorView_->canvas()->yaw();
+        const double pitch = editorView_->canvas()->pitch();
+        for (auto *row : rows_) {
             row->setViewMode(currentView_);
+            row->setCamera(yaw, pitch, 1.0);
+        }
     }
     int currentView() const {
         return currentView_;
