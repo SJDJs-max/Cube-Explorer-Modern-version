@@ -57,10 +57,13 @@ inline void runUiSmoke(MainWindow &window, QApplication &app, const QString &scr
         for (auto *action : window.findChildren<QAction *>()) {
             if (action->text() == "夜晚模式")
                 night = action;
-            if (action->text() == "自定义选中颜色…")
+            if (action->text() == "自定义选中颜色")
                 color = action;
         }
         check(theme && night && color, "Theme shortcut, menu or color option missing");
+        auto *toggleMainAction = window.findChild<QAction *>("toggleMainWindowAction");
+        check(toggleMainAction && toggleMainAction->text() == "展开主窗口",
+              "Collapsed main window must display '展开主窗口' in Options menu");
         theme->click();
         check(window.dark() && night->isChecked(), "Theme shortcut must update menu state");
         night->trigger();
@@ -413,6 +416,9 @@ inline void runUiSmoke(MainWindow &window, QApplication &app, const QString &scr
                                 "Expanding the main results should center the complete window on its screen");
                         check(window.leftVisible() && window.rows().size() == 1,
                               "First Add must expand main results and copy buffered formula");
+                        auto *toggleMain = window.findChild<QAction *>("toggleMainWindowAction");
+                        check(toggleMain && toggleMain->text() == "收起主窗口",
+                              "Expanded main window must display '收起主窗口' in Options menu");
                         auto first = window.rows().front()->result();
                         check(first && first->formula && first->moves.empty() && first->turns == 0,
                               "Add changed verified zero-step formula content or count");

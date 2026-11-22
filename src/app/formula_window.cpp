@@ -1,9 +1,12 @@
 #include "formula_window.hpp"
 #include "ui_i18n.hpp"
 #include "ui_icons.hpp"
+#include <QClipboard>
 #include <QMenu>
+#include <QRegularExpression>
 #include <QScrollArea>
 #include <QTextBlock>
+#include <QToolTip>
 #include <algorithm>
 #include <condition_variable>
 #include <limits>
@@ -64,6 +67,22 @@ FormulaWindow::FormulaWindow(PatternState input, bool generate, std::function<vo
     output_->setObjectName("formulaOutput");
     output_->setReadOnly(true);
     output_->setLineWrapMode(QPlainTextEdit::NoWrap);
+    output_->setContextMenuPolicy(Qt::CustomContextMenu);
+    connect(output_, &QWidget::customContextMenuRequested, this, [this](const QPoint &pos) {
+        std::unique_ptr<QMenu> menu(output_->createStandardContextMenu());
+        for (auto *act : menu->actions()) {
+            const QString t = act->text();
+            if (t.contains("复制") || t.contains("Copy")) {
+                connect(act, &QAction::triggered, this, [this] {
+                    const QString msg = trUi("✓ 已复制到剪贴板", "✓ Copied to clipboard");
+                    showCopyToast(msg);
+                    setStatus(msg);
+                });
+            }
+        }
+        menu->exec(output_->mapToGlobal(pos));
+    });
+    output_->viewport()->installEventFilter(this);
     QFont font;
     font.setFamilies({"Consolas", "Microsoft YaHei UI", "Microsoft YaHei"});
     font.setPixelSize(15);
@@ -131,28 +150,25 @@ FormulaWindow::FormulaWindow(PatternState input, bool generate, std::function<vo
     fold_->setArrowType(Qt::RightArrow);
     fold_->setCheckable(true);
 
-    // Compact MCC sort toolbar sits on the foldRow line — zero vertical height taken from output_.
+    // Compact display sort selector sits on the foldRow line — zero vertical height taken from output_.
+    mccSortLabel_ = new QLabel;
     mccSort_ = new QComboBox;
     mccSort_->setObjectName("formulaMccSort");
     mccSort_->addItems({"", "", ""});
     mccSort_->setCurrentIndex(0);
+    mccSort_->setSizeAdjustPolicy(QComboBox::AdjustToContents);
     connect(mccSort_, qOverload<int>(&QComboBox::currentIndexChanged), this, [this] {
         if (!results_.empty())
             rebuildOutput();
     });
-
-    mccParamsBtn_ = new QToolButton;
-    mccParamsBtn_->setObjectName("formulaMccParams");
-    mccParamsBtn_->setAutoRaise(true);
-    connect(mccParamsBtn_, &QToolButton::clicked, this, &FormulaWindow::showMccParamsDialog);
 
     auto *foldRow = new QHBoxLayout;
     foldRow->setContentsMargins(0, 0, 0, 0);
     foldRow->setSpacing(6);
     foldRow->addWidget(fold_, 0, Qt::AlignLeft);
     foldRow->addStretch();
+    foldRow->addWidget(mccSortLabel_);
     foldRow->addWidget(mccSort_);
-    foldRow->addWidget(mccParamsBtn_);
     outer->addLayout(foldRow);
 
     auto *advanced = new QWidget;
@@ -170,18 +186,21 @@ FormulaWindow::FormulaWindow(PatternState input, bool generate, std::function<vo
         powers->addWidget(powerBoxes_[i]);
         settings_.push_back(powerBoxes_[i]);
     }
-    powers->addStretch();
+    powers->addSpacing(10);
     fineMovesBtn_ = new QPushButton;
     fineMovesBtn_->setObjectName("formulaFineMoves");
     fineMovesBtn_->setAutoDefault(false);
     connect(fineMovesBtn_, &QPushButton::clicked, this, &FormulaWindow::showFineMovesDialog);
     powers->addWidget(fineMovesBtn_);
+    powers->addStretch();
     settings_.push_back(fineMovesBtn_);
     advancedLayout->addLayout(powers);
 
     auto *columns = new QHBoxLayout;
     auto *left = new QFormLayout;
     auto *right = new QFormLayout;
+    left->setFieldGrowthPolicy(QFormLayout::FieldsStayAtSizeHint);
+    right->setFieldGrowthPolicy(QFormLayout::FieldsStayAtSizeHint);
     minimum_ = spin(left, minLabel_, "", 0, std::numeric_limits<int>::max(), 0);
     maximum_ = spin(left, maxLabel_, "", -1, std::numeric_limits<int>::max(), -1);
     resultLimit_ = spin(left, resLabel_, "", 0, std::numeric_limits<int>::max(), 0);
@@ -193,7 +212,6 @@ FormulaWindow::FormulaWindow(PatternState input, bool generate, std::function<vo
     maxRotations_->setObjectName("formulaMaxRotations");
     timeLimit_->setObjectName("formulaTimeLimit");
     nodes_ = new QDoubleSpinBox;
-    nodes_->setMaximumWidth(150);
     nodes_->setDecimals(0);
     nodes_->setRange(0, 1000000000000.0);
     nodes_->setSingleStep(1000000);
@@ -204,9 +222,16 @@ FormulaWindow::FormulaWindow(PatternState input, bool generate, std::function<vo
     heuristic_ = new QComboBox;
     heuristic_->setObjectName("formulaHeuristic");
     heuristic_->addItems({"", "", ""});
+    heuristic_->setSizeAdjustPolicy(QComboBox::AdjustToContents);
     heurLabel_ = new QLabel;
     right->addRow(heurLabel_, heuristic_);
     settings_.push_back(heuristic_);
+    mccParamsLabel_ = new QLabel;
+    mccParamsBtn_ = new QPushButton;
+    mccParamsBtn_->setObjectName("formulaMccParams");
+    mccParamsBtn_->setAutoDefault(false);
+    connect(mccParamsBtn_, &QPushButton::clicked, this, &FormulaWindow::showMccParamsDialog);
+    right->addRow(mccParamsLabel_, mccParamsBtn_);
     columns->addLayout(left, 1);
     columns->addSpacing(14);
     columns->addLayout(right, 1);
@@ -236,11 +261,10 @@ FormulaWindow::FormulaWindow(PatternState input, bool generate, std::function<vo
     preRotation_->setObjectName("formulaPreRotation");
     preRotation_->addItems({"", "", ""});
     preRotation_->setCurrentIndex(0);
-    preRotNoteLabel_ = new QLabel;
-    preRotNoteLabel_->setObjectName("smallMuted");
+    preRotation_->setSizeAdjustPolicy(QComboBox::AdjustToContents);
     preRotRow->addWidget(preRotLabel_);
-    preRotRow->addWidget(preRotation_, 1);
-    preRotRow->addWidget(preRotNoteLabel_);
+    preRotRow->addWidget(preRotation_);
+    preRotRow->addStretch();
     settings_.push_back(preRotation_);
     advancedLayout->addLayout(preRotRow);
     advanced->hide();
@@ -384,7 +408,7 @@ void FormulaWindow::showFineMovesDialog() {
     if (busy_)
         return;
     QDialog dlg(this);
-    dlg.setWindowTitle(trUi("精细动作与次数限制", "Fine-Grained Moves & Limits"));
+    dlg.setWindowTitle(trUi("精细限制", "Fine Limits"));
     auto *root = new QVBoxLayout(&dlg);
     auto *hint = new QLabel(trUi("可单独勾选/取消任意具体转动（如禁 F2 / L2），或限制单个符号的最大出现次数（-1 为不限）。",
                                  "Toggle individual move powers (e.g. ban F2 / L2) or set per-symbol max uses (-1 = unlimited)."));
@@ -627,6 +651,46 @@ void FormulaWindow::rebuildOutput() {
     output_->setPlainText(lines.join('\n'));
 }
 
+void FormulaWindow::showCopyToast(const QString &text) {
+    if (!output_)
+        return;
+    if (!copyToast_) {
+        copyToast_ = new QLabel(output_);
+        copyToast_->setObjectName("formulaCopyToast");
+        copyToast_->setAlignment(Qt::AlignCenter);
+        copyToast_->setAttribute(Qt::WA_TransparentForMouseEvents);
+        copyToast_->hide();
+    }
+    if (!copyToastTimer_) {
+        copyToastTimer_ = new QTimer(this);
+        copyToastTimer_->setSingleShot(true);
+        connect(copyToastTimer_, &QTimer::timeout, this, [this] {
+            if (copyToast_)
+                copyToast_->hide();
+        });
+    }
+    const auto px = [this](int value) { return qRound(value * uiScale_); };
+    const bool dark = qApp && qApp->property("cubeDarkMode").toBool();
+    copyToast_->setStyleSheet(
+        QString("QLabel#formulaCopyToast { background: %1; color: %2; border: 1px solid %3; "
+                "border-radius: %4px; padding: %5px %6px; font-size: %7px; font-weight: 500; }")
+            .arg(dark ? "rgba(24, 36, 51, 242)" : "rgba(27, 40, 56, 238)")
+            .arg("#f8fafc")
+            .arg(dark ? "#47607a" : "#3a5068")
+            .arg(px(7))
+            .arg(px(7))
+            .arg(px(16))
+            .arg(px(13)));
+    copyToast_->setText(text);
+    copyToast_->adjustSize();
+    const int x = std::max(px(8), (output_->width() - copyToast_->width()) / 2);
+    const int y = std::max(px(8), (output_->height() - copyToast_->height()) / 2);
+    copyToast_->move(x, y);
+    copyToast_->raise();
+    copyToast_->show();
+    copyToastTimer_->start(1250);
+}
+
 void FormulaWindow::updateButtonIcons() {
     const int iconPx = qRound(16 * uiScale_);
     const QColor ink = palette().color(QPalette::ButtonText);
@@ -688,9 +752,11 @@ void FormulaWindow::retranslateUi() {
     setWindowTitle(generate_ ? trUi("公式窗口 · 生成当前情况", "Formula Window · Generate")
                              : trUi("公式窗口 · 求解当前情况", "Formula Window · Solve"));
     output_->setPlaceholderText(
-        trUi("尚未开始搜索。选择允许使用的转动，然后点击“开始搜索”。",
-             "Ready to search. Select allowed moves and click \"Start Search\"."));
-    moveGroup_->setTitle(trUi("允许使用的转动（右键可禁单角度）", "Allowed Moves (Right-click for angles)"));
+        trUi("尚未开始搜索。选择允许使用的转动，然后点击“开始搜索”（双击结果行可快速复制公式）。",
+             "Ready to search. Select allowed moves and click \"Start Search\" (double-click a result line to copy)."));
+    moveGroup_->setTitle(trUi("允许使用的转动", "Allowed Moves"));
+    moveGroup_->setToolTip(trUi("右键单个转动可禁用单角度（如禁 F2）或设置出现次数上限",
+                                "Right-click any move to disable specific angles (e.g. F2) or set max uses"));
     for (int i = 0; i < 18; ++i)
         updateMoveBoxDecoration(i);
     categoryBoxes_[0]->setText(trUi("允许中层转动", "Allow Slice Moves"));
@@ -701,22 +767,25 @@ void FormulaWindow::retranslateUi() {
                               : trUi("开始搜索", "Start Search"));
     clear_->setText(trUi("清空窗口", "Clear Window"));
     add_->setText(trUi("将解添加到主窗口", "Add to Main Window"));
-    add_->setToolTip(trUi("把窗口内的全部结果按当前顺序加入主窗口；再次点击会再次加入全部结果，沿用原版行为。",
-                          "Copy all verified results (in current order) into the main window."));
-    fold_->setText(trUi("搜索设置", "Search Settings"));
-    mccSort_->setItemText(0, trUi("搜索顺序", "Search Order"));
-    mccSort_->setItemText(1, trUi("步数 → MCC", "Moves → MCC"));
-    mccSort_->setItemText(2, trUi("MCC → 步数", "MCC → Moves"));
-    mccSort_->setToolTip(trUi("不改变搜索算法，按选定口径对当前结果实时无损重排。",
-                              "Losslessly re-sorts current results without changing search semantics."));
-    mccParamsBtn_->setText(trUi("MCC 设置", "MCC"));
+    add_->setToolTip({});
+    fold_->setText(trUi("高级设置", "Advanced Settings"));
+    if (mccSortLabel_)
+        mccSortLabel_->setText(trUi("显示顺序", "Sort Order"));
+    mccSort_->setItemText(0, trUi("默认", "Default"));
+    mccSort_->setItemText(1, "HTM");
+    mccSort_->setItemText(2, "MCC");
+    mccSort_->setToolTip(trUi("不改变搜索算法，按选定口径对当前结果实时无损重排（默认 / HTM 步数优先 / MCC 手感优先）。",
+                              "Losslessly re-sorts current results (Default / HTM move count / MCC ergonomics)."));
+    if (mccParamsLabel_)
+        mccParamsLabel_->setText(trUi("MCC 设置", "MCC Setup"));
+    mccParamsBtn_->setText(trUi("参数设置", "Configure"));
     mccParamsBtn_->setToolTip(trUi("调整 MCC 手感参数与“去起手 U”开关",
                                    "Configure MCC ergonomics parameters and pre-AUF option"));
     powersLabel_->setText(trUi("转动角度", "Turn Angles"));
     powerBoxes_[0]->setText("90°");
     powerBoxes_[1]->setText("180°");
     powerBoxes_[2]->setText(trUi("逆向 90°", "90° CCW"));
-    fineMovesBtn_->setText(trUi("精细动作…", "Fine Moves…"));
+    fineMovesBtn_->setText(trUi("精细限制", "Fine Limits"));
     fineMovesBtn_->setToolTip(trUi("自由禁用任意单个动作（如 F2、L2）或限制某层最多出现次数",
                                    "Individually ban specific moves (e.g. F2, L2) or set per-layer max uses"));
     minLabel_->setText(trUi("最少步数", "Min Moves"));
@@ -759,19 +828,15 @@ void FormulaWindow::retranslateUi() {
         preRotation_->setItemText(
             2, trUi("全空间预旋转 x/y/z（24 种朝向，完成后底色在 D 面）",
                     "Full 24-orientation x/y/z (24 orientations, finishes on D)"));
-        preRotNoteLabel_->setText(
-            trUi("（专为 Cross/XCross 设计：仅在起手前预转体，后续不转体）",
-                 "(For Cross/XCross: pre-rotates before first turn only)"));
         const QString tip = trUi(
-            "专为 Cross/XCross 求解设计：在给定动作集合求解前，先尝试起手预旋转，仅发生在所有转动之前，后续不再转体，且严格保证完成后底色位于 D 底面：\n"
+            "专为 Cross/XCross 求解设计：仅在起手前预转体，后续不转体，且严格保证完成后底色位于 D 底面：\n"
             "• 水平预旋转 y/y2/y'（4 种）：起手仅水平转体，适合纯外层或双层转动；\n"
             "• 全空间预旋转 x/y/z（24 种）：起手可 x/y/z 任意朝向，配合双层/中层转动（如 x' r U' r'）在完成时将底色中心刚好带回 D 底面！",
-            "Designed for Cross/XCross solving: tries initial pre-rotations before the first turn only, with no mid-solve rotations, while guaranteeing the bottom center finishes on physical D:\n"
+            "Designed for Cross/XCross solving: pre-rotates before the first turn only, with no mid-solve rotations, while guaranteeing the bottom center finishes on physical D:\n"
             "• Horizontal y/y2/y' (4): horizontal pre-rotation only;\n"
             "• Full x/y/z (24): any spatial pre-rotation, allowing wide/slice moves (e.g. x' r U' r') to bring the bottom center onto D upon completion.");
         preRotation_->setToolTip(tip);
         preRotLabel_->setToolTip(tip);
-        preRotNoteLabel_->setToolTip(tip);
     }
     updateButtonIcons();
 }
@@ -1068,6 +1133,33 @@ void FormulaWindow::resizeEvent(QResizeEvent *event) {
         setUiScale(std::clamp(std::min(width() / 610.0, height() / 740.0), .75, 2.0));
 }
 
+bool FormulaWindow::eventFilter(QObject *watched, QEvent *event) {
+    if (output_ && watched == output_->viewport() && event->type() == QEvent::MouseButtonDblClick) {
+        auto *me = static_cast<QMouseEvent *>(event);
+        if (me->button() == Qt::LeftButton) {
+            const auto cursor = output_->cursorForPosition(me->pos());
+            const QString line = cursor.block().text().trimmed();
+            static const QRegularExpression re(R"(^(.*?)\s*\(\d+f\*?\)(?:\s*\[MCC\s+[0-9.]+\])?$)");
+            const auto m = re.match(line);
+            if (m.hasMatch()) {
+                QString formula = m.captured(1).trimmed();
+                if (auto *cb = QGuiApplication::clipboard())
+                    cb->setText(formula);
+                QTextCursor selCursor(cursor.block());
+                selCursor.movePosition(QTextCursor::EndOfBlock, QTextCursor::KeepAnchor);
+                output_->setTextCursor(selCursor);
+                const QString msg =
+                    formula.isEmpty() ? trUi("✓ 已复制到剪贴板（0 步空公式）", "✓ Copied to clipboard (0-move)")
+                                      : trUi("✓ 已复制到剪贴板", "✓ Copied to clipboard");
+                showCopyToast(msg);
+                setStatus(formula.isEmpty() ? msg : msg + "：" + formula);
+                return true;
+            }
+        }
+    }
+    return QDialog::eventFilter(watched, event);
+}
+
 void FormulaWindow::setUiScale(double scale) {
     if (scaling_)
         return;
@@ -1096,14 +1188,21 @@ void FormulaWindow::setUiScale(double scale) {
     if (fold_)
         fold_->setIconSize(QSize(px(16), px(16)));
     updateButtonIcons();
-    for (auto *box : {minimum_, maximum_, resultLimit_, maxRotations_, timeLimit_}) {
-        box->setMinimumWidth(px(75));
-        box->setMaximumWidth(px(130));
+    for (auto *box : {minimum_, maximum_, resultLimit_, maxRotations_}) {
+        box->setFixedWidth(px(92));
         box->setMinimumHeight(px(27));
     }
-    nodes_->setMaximumWidth(px(150));
+    timeLimit_->setFixedWidth(px(108));
+    timeLimit_->setMinimumHeight(px(27));
+    nodes_->setFixedWidth(px(108));
     nodes_->setMinimumHeight(px(27));
     heuristic_->setMinimumHeight(px(27));
+    if (mccParamsBtn_) {
+        mccParamsBtn_->setFixedWidth(px(108));
+        mccParamsBtn_->setMinimumHeight(px(27));
+    }
+    if (preRotation_)
+        preRotation_->setMinimumHeight(px(27));
     if (mccSort_)
         mccSort_->setMinimumHeight(px(24));
     for (const auto &metric : layoutMetrics_) {

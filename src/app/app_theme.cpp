@@ -381,7 +381,8 @@ QToolButton[presetChip="true"]:pressed { background: @pressed; border-color: @ac
 QToolButton[presetAccent="true"] { background: @selected; border: 1px solid @selectedline; color: @accent; font-weight: 600; }
 QToolButton[presetAccent="true"]:hover { background: @hover; border-color: @accent; }
 QPushButton#moveButton { font-family: "Consolas", "Segoe UI", "Microsoft YaHei UI"; font-size: 15px; font-weight: 600; padding: 2px 4px; min-height: 19px; min-width: 24px; }
-QPushButton#solveCurrent, QPushButton#generateCurrent, QPushButton#formulaStart { font-weight: 600; }
+QPushButton#solveCurrent, QPushButton#generateCurrent { font-weight: normal; }
+QPushButton#formulaStart { font-weight: 600; }
 QPushButton#solveCurrent:enabled:!hover:!pressed,
 QPushButton#generateCurrent:enabled:!hover:!pressed,
 QPushButton#formulaStart:enabled:!hover:!pressed { background: @selected; border-color: @selectedline; }

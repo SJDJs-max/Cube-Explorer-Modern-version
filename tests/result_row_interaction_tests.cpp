@@ -144,6 +144,9 @@ int main(int argc, char **argv) {
         formulaData.rotations = 1;
         formulaRow.setFormulaResult(formulaData);
         const auto formulaText = formulaRow.findChild<QLabel *>("formulaText")->text();
+        auto *formulaCopyBtn = formulaRow.findChild<QToolButton *>("resultCopy");
+        check(!formulaCopyBtn || !formulaCopyBtn->isVisible(),
+              "Method 2 formula rows in main window should not display the Method 1 copy button");
         check(formulaText.contains("(1f)") && !formulaText.contains("旋转") &&
                   formulaRow.result()->rotations == 1 && formulaRow.result()->turns == 1,
               "rotation display is hidden without changing internal rotation and turn counts");

@@ -115,7 +115,7 @@ class MainWindow final : public QMainWindow {
     std::vector<ShortcutBinding> shortcuts_;
     QMenu *fileMenu_ = nullptr, *editMenu_ = nullptr, *runMenu_ = nullptr, *optionsMenu_ = nullptr,
           *helpMenu_ = nullptr, *viewsMenu_ = nullptr, *perfMenu_ = nullptr;
-    QAction *nightAction_ = nullptr;
+    QAction *nightAction_ = nullptr, *toggleLeftAction_ = nullptr;
     std::array<QAction *, 3> viewActions_{};
     std::array<QAction *, 3> perfActions_{};
     QGroupBox *selectBox_ = nullptr, *moveBox_ = nullptr, *resetBox_ = nullptr, *inputBox_ = nullptr;
@@ -230,10 +230,19 @@ class MainWindow final : public QMainWindow {
             ++running;
         }
     }
+    void updateToggleLeftText() {
+        if (!toggleLeftAction_)
+            return;
+        const bool hidden = !left_ || left_->isHidden();
+        toggleLeftAction_->setText(
+            hidden ? trUi("展开主窗口", "Expand Main Window")
+                   : trUi("收起主窗口", "Collapse Main Window"));
+    }
     void showLeft(int = 0) {
         const bool wasHidden = left_->isHidden();
         setMinimumSize(840, 530);
         left_->show();
+        updateToggleLeftText();
         if (wasHidden) {
             const auto available = screen()->availableGeometry();
             const auto desired = qRound(1120 * uiScale_);
@@ -250,6 +259,7 @@ class MainWindow final : public QMainWindow {
     }
     void hideLeft() {
         left_->hide();
+        updateToggleLeftText();
         setMinimumSize(380, 530);
         resize(qRound(510 * uiScale_), qRound(730 * uiScale_));
         updateScale(true);
@@ -358,6 +368,7 @@ class MainWindow final : public QMainWindow {
             perfMenu_->setTitle(trUi("性能模式", "Performance"));
         for (const auto &entry : menuTexts_)
             entry.action->setText(trUi(entry.zh, entry.en));
+        updateToggleLeftText();
         if (selectBox_)
             selectBox_->setTitle(trUi("选择", "Solve"));
         if (moveBox_)
@@ -1291,20 +1302,20 @@ class MainWindow final : public QMainWindow {
             return a;
         };
         fileMenu_ = menuBar()->addMenu(trUi("文件(&F)", "File(&F)"));
-        action(fileMenu_, "加载公式…", "Load Maneuvers…", [this] { loadFile(); });
-        auto *saveText = action(fileMenu_, "保存公式文本…", "Save Maneuvers…", [this] { saveFile(true); });
-        auto *saveHtml = action(fileMenu_, "保存为 HTML…", "Save as HTML…", [this] { exportHtml(); });
+        action(fileMenu_, "加载公式", "Load Maneuvers", [this] { loadFile(); });
+        auto *saveText = action(fileMenu_, "保存公式文本", "Save Maneuvers", [this] { saveFile(true); });
+        auto *saveHtml = action(fileMenu_, "保存为 HTML", "Save as HTML", [this] { exportHtml(); });
         fileMenu_->addSeparator();
-        action(fileMenu_, "打印设置…", "Printer Setup…", [this] {
+        action(fileMenu_, "打印设置", "Printer Setup", [this] {
             QPrintDialog dialog(&printer_, this);
             dialog.setWindowTitle(trUi("打印设置", "Printer Setup"));
             dialog.exec();
         });
-        auto *printAll = action(fileMenu_, "打印全部魔方…", "Print All Cubes…", [this] { printRows(false); });
+        auto *printAll = action(fileMenu_, "打印全部魔方", "Print All Cubes", [this] { printRows(false); });
         auto *printSelected =
-            action(fileMenu_, "打印选中魔方…", "Print Selected Cubes…", [this] { printRows(true); });
+            action(fileMenu_, "打印选中魔方", "Print Selected Cubes", [this] { printRows(true); });
         fileMenu_->addSeparator();
-        action(fileMenu_, "保存工作区…", "Save Workspace…", [this] { saveFile(); });
+        action(fileMenu_, "保存工作区", "Save Workspace", [this] { saveFile(); });
         fileMenu_->addSeparator();
         action(fileMenu_, "退出", "Exit", [this] { close(); }, QKeySequence(Qt::ALT | Qt::Key_X));
         connect(fileMenu_, &QMenu::aboutToShow, this, [this, saveText, saveHtml, printAll, printSelected] {
@@ -1317,7 +1328,7 @@ class MainWindow final : public QMainWindow {
         auto *deleteSelected = action(editMenu_, "删除选中魔方", "Delete Selected Cubes",
                                       [this] { removeRows([](ResultRow *r) { return r->selected(); }); });
         editMenu_->addSeparator();
-        action(editMenu_, "添加随机魔方…", "Add Random Cubes…", [this] { addRandom(); });
+        action(editMenu_, "添加随机魔方", "Add Random Cubes", [this] { addRandom(); });
         auto *wca = action(editMenu_, "生成 WCA 打乱（原版）", "Generate WCA Scrambles (Legacy)",
                            [this] { legacyWcaScrambles(); });
         wca->setToolTip(trUi("沿用原版：切换标准配色，清空列表，生成五个随机魔方的生成公式，目标为 21 步。",
@@ -1328,18 +1339,18 @@ class MainWindow final : public QMainWindow {
         action(editMenu_, "按魔方 ID 排序", "Sort by Cube ID", [this] { reorder(2); });
         editMenu_->addSeparator();
         action(editMenu_, "清空主窗口", "Clear Main Window", [this] { clearMainWindow(); });
-        action(editMenu_, "输入贴纸状态…", "Input Facelet String…", [this] { importState(); });
+        action(editMenu_, "输入贴纸状态", "Input Facelet String", [this] { importState(); });
         connect(editMenu_, &QMenu::aboutToShow, this, [this, deleteSelected] {
             deleteSelected->setEnabled(
                 std::any_of(rows_.begin(), rows_.end(), [](auto *r) { return r->selected(); }));
         });
         runMenu_ = menuBar()->addMenu(trUi("运行(&Z)", "Run(&Z)"));
         auto *startSelectedAction =
-            action(runMenu_, "开始搜索选中魔方…", "Start Search for Selected…", [this] { startSelected(); });
+            action(runMenu_, "开始搜索选中魔方", "Start Search for Selected", [this] { startSelected(); });
         auto *stopSelectedAction =
             action(runMenu_, "停止搜索选中魔方", "Stop Search for Selected", [this] { stopSelected(); });
         runMenu_->addSeparator();
-        action(runMenu_, "设置自动运行线程数…", "Set Autorun Threads…", [this] {
+        action(runMenu_, "设置自动运行线程数", "Set Autorun Threads", [this] {
             bool ok = false;
             const auto n = QInputDialog::getInt(this, trUi("自动运行线程数", "Autorun Threads"),
                                                 trUi("同时运行的搜索数量", "Concurrent searches"),
@@ -1353,7 +1364,7 @@ class MainWindow final : public QMainWindow {
             action(runMenu_, "开始最优自动运行", "Start Optimal Autorun", [this] { autorun(true); });
         runMenu_->addSeparator();
         auto *xcAction =
-            action(runMenu_, "Cross 快速求解…", "Cross Quick Solver…", [this] { openXCrossDialog(); });
+            action(runMenu_, "Cross 快速求解", "Cross Quick Solver", [this] { openXCrossDialog(); });
         xcAction->setObjectName("xcrossMenuAction");
         connect(runMenu_, &QMenu::aboutToShow, this,
                 [this, startSelectedAction, stopSelectedAction, autoTwo, autoOptimal] {
@@ -1371,8 +1382,8 @@ class MainWindow final : public QMainWindow {
                     autoOptimal->setEnabled(!autoRun_ || autoOptimal_);
                 });
         optionsMenu_ = menuBar()->addMenu(trUi("选项(&O)", "Options(&O)"));
-        action(optionsMenu_, "二阶段算法…", "Two-Phase Algorithm…", [this] { solverOptions(false); });
-        action(optionsMenu_, "最优求解器…", "Optimal Solver…", [this] { solverOptions(true); });
+        action(optionsMenu_, "二阶段算法", "Two-Phase Algorithm", [this] { solverOptions(false); });
+        action(optionsMenu_, "最优求解器", "Optimal Solver", [this] { solverOptions(true); });
         perfMenu_ = optionsMenu_->addMenu(trUi("性能模式", "Performance"));
         auto *perfGroup = new QActionGroup(this);
         const std::array<std::pair<const char *, const char *>, 3> perfNames = {
@@ -1407,12 +1418,13 @@ class MainWindow final : public QMainWindow {
             refresh();
         });
         auto *editCenters =
-            action(optionsMenu_, "编辑中心方向…", "Edit Center Orientations…", [this] { centersDialog(); });
+            action(optionsMenu_, "编辑中心方向", "Edit Center Orientations", [this] { centersDialog(); });
         connect(optionsMenu_, &QMenu::aboutToShow, this, [this, centers, editCenters] {
             const bool enabled = std::any_of(centers_.begin(), centers_.end(), [](int n) { return n >= 0; });
             const QSignalBlocker blocked(centers);
             centers->setChecked(enabled);
             editCenters->setEnabled(enabled);
+            updateToggleLeftText();
         });
         optionsMenu_->addSeparator();
         nightAction_ = action(optionsMenu_, "夜晚模式", "Dark Mode", [this] { changeAppearance(!dark_); });
@@ -1428,11 +1440,18 @@ class MainWindow final : public QMainWindow {
             viewGroup->addAction(viewActions_[i]);
         }
         viewActions_[0]->setChecked(true);
-        action(optionsMenu_, "自定义选中颜色…", "Customize Active Color…", [this] { customColor(); });
+        action(optionsMenu_, "自定义选中颜色", "Customize Active Color", [this] { customColor(); });
         auto *shortcutsAction =
-            action(optionsMenu_, "快捷键设置…", "Keyboard Shortcuts…", [this] { shortcutsDialog(); });
+            action(optionsMenu_, "快捷键设置", "Keyboard Shortcuts", [this] { shortcutsDialog(); });
         shortcutsAction->setObjectName("shortcutsMenuAction");
-        action(optionsMenu_, "收起主窗口结果区", "Collapse Results Pane", [this] { hideLeft(); });
+        toggleLeftAction_ = optionsMenu_->addAction(trUi("展开主窗口", "Expand Main Window"));
+        toggleLeftAction_->setObjectName("toggleMainWindowAction");
+        connect(toggleLeftAction_, &QAction::triggered, this, [this] {
+            if (!left_ || left_->isHidden())
+                showLeft();
+            else
+                hideLeft();
+        });
         action(optionsMenu_, "MCP 接口配置", "MCP Configuration", [this] {
             const auto path = baseDirectory() + "/mcp-config.json";
             if (!QFileInfo::exists(path) || !QDesktopServices::openUrl(QUrl::fromLocalFile(path)))

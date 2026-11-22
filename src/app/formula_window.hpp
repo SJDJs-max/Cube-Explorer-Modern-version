@@ -23,10 +23,11 @@ class FormulaWindow final : public QDialog {
     QCheckBox *modU_ = nullptr, *symmetry_ = nullptr, *dedup_ = nullptr, *triples_ = nullptr,
               *memoize_ = nullptr, *rotationQuotient_ = nullptr;
     QComboBox *heuristic_ = nullptr, *preRotation_ = nullptr;
-    QLabel *preRotLabel_ = nullptr, *preRotNoteLabel_ = nullptr;
+    QLabel *preRotLabel_ = nullptr;
     QPushButton *fineMovesBtn_ = nullptr;
+    QLabel *mccSortLabel_ = nullptr, *mccParamsLabel_ = nullptr;
     QComboBox *mccSort_ = nullptr;
-    QToolButton *mccParamsBtn_ = nullptr;
+    QPushButton *mccParamsBtn_ = nullptr;
     bool mccIgnoreAuf_ = true;
     MccParams mccParams_{};
     std::chrono::steady_clock::time_point lastLiveSort_{};
@@ -39,6 +40,8 @@ class FormulaWindow final : public QDialog {
            *nodesLabel_ = nullptr, *heurLabel_ = nullptr, *maxRotLabel_ = nullptr;
     QString statusText_, statisticsText_;
     QString preambleText_, epilogueText_;
+    QLabel *copyToast_ = nullptr;
+    QTimer *copyToastTimer_ = nullptr;
     std::optional<PatternReport> lastReport_;
     double uiScale_ = 1.0;
     bool scaling_ = false;
@@ -56,6 +59,7 @@ class FormulaWindow final : public QDialog {
     QString formatResultLine(const ResultData &data) const;
     void rebuildOutput();
     void updateButtonIcons();
+    void showCopyToast(const QString &text);
     void configureState(bool);
     void setStatus(QString);
     void updateStatusLine();
@@ -77,6 +81,7 @@ class FormulaWindow final : public QDialog {
     void closeEvent(QCloseEvent *) override;
     void reject() override;
     void resizeEvent(QResizeEvent*) override;
+    bool eventFilter(QObject *watched, QEvent *event) override;
 
   public:
     std::function<void(bool)> onBusy;

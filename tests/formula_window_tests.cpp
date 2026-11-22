@@ -333,6 +333,25 @@ int main(int argc, char **argv) {
             require(fineOut && fineOut->toPlainText().contains("[y'] R' U' R") &&
                         fineOut->toPlainText().contains("[y] L' U' L"),
                     "FormulaWindow output did not bracket leading pre-rotations");
+            // Double-clicking a formula line in FormulaWindow copies its formula text to clipboard:
+            fine.show();
+            QApplication::processEvents();
+            const int pos = fineOut->toPlainText().indexOf("[y'] R' U' R");
+            require(pos >= 0, "Formula text missing in output");
+            QTextCursor tc = fineOut->textCursor();
+            tc.setPosition(pos + 2);
+            fineOut->setTextCursor(tc);
+            const QRect cursorRect = fineOut->cursorRect(tc);
+            const QPoint clickPt = cursorRect.center();
+            QMouseEvent dblClick(QEvent::MouseButtonDblClick, QPointF(clickPt),
+                                 fineOut->viewport()->mapToGlobal(clickPt), Qt::LeftButton, Qt::LeftButton,
+                                 Qt::NoModifier);
+            QApplication::sendEvent(fineOut->viewport(), &dblClick);
+            require(QGuiApplication::clipboard()->text() == "[y'] R' U' R",
+                    "Double-clicking formula line in FormulaWindow did not copy formula to clipboard");
+            auto *toast = fine.findChild<QLabel *>("formulaCopyToast");
+            require(toast && toast->isVisible() && toast->text().contains("已复制到剪贴板"),
+                    "Double-clicking formula line did not show floating copy toast");
         }
         std::cout << "formula_window_tests: " << checks << " checks passed\n";
     } catch (const std::exception &error) {

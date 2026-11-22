@@ -176,8 +176,9 @@ class ResultRow final : public QFrame {
             return;
         }
         if (copy_) {
-            copy_->setVisible(true);
-            updateCopyIcon();
+            copy_->setVisible(!formula_);
+            if (!formula_)
+                updateCopyIcon();
         }
         const auto text = formatDisplayMoves(d->moves, d->formula);
         QString displayed = text + (text.isEmpty() ? "" : "  ") +
