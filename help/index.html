@@ -35,7 +35,7 @@
 <p>可通过编辑器左上角切换条、菜单“选项 → 魔方显示”或快捷键（默认 <code>F2</code>）在<strong>经典展开</strong>、<strong>2D 展开</strong>与<strong>3D 魔方</strong>之间切换。<strong>左侧结果列表中的魔方缩略图会自动跟随主视角同步切换</strong>（经典、2D、3D 均完整支持），且导出 HTML 时也会保留当前视角。</p>
 <p>在 3D 视图中，不带修饰键的左键拖动可自由旋转观察角度，滚轮缩放，单击仍可直接染色或取色；<strong>拖动或重置主界面 3D 视角时，左侧结果列表中的所有 3D 缩略图也会实时跟随同步旋转</strong>，且不会改变魔方状态或增加动作。</p>
 <p>点击菜单栏右上角的<strong>中文 / EN</strong>按钮或月亮 / 太阳按钮可即时切换语言与日夜主题；打开帮助（<code>F1</code>）会自动打开对应语言的离线帮助文档。配色、视角、主题、AutoFix、性能模式与自定义快捷键保存在程序目录的 <code>data/preferences.ini</code>。</p>
-<p>默认白顶、绿前、红右（U 白 / R 红 / F 绿 / D 黄 / L 橙 / B 蓝）。如需修改某面颜色，先点击该面中心取色，再选择“选项 → 自定义选中颜色…”。</p>
+<p>默认白顶、绿前、红右（U 白 / R 红 / F 绿 / D 黄 / L 橙 / B 蓝）。如需修改某面颜色，先点击该面中心取色，再选择“选项 → 自定义选中颜色”。“选项”菜单还提供动态切换的<strong>展开主窗口 / 收起主窗口</strong>选项。</p>
 </section>
 
 <section id="input"><h2>贴纸编辑、增强公式输入与自定义快捷键</h2>
@@ -62,7 +62,7 @@
 <div class="note">公式中的小写字母（如 <code>r</code>）表示宽转；“编辑 → 输入贴纸状态”中的 54 字符贴纸串里的小写字母表示忽略朝向。</div>
 
 <h3>自定义快捷键</h3>
-<p>在“选项 → 快捷键设置…”中可以自定义全部高频操作快捷键，并支持一键恢复默认（自动兼容主回车与小键盘回车）：</p>
+<p>在“选项 → 快捷键设置”中可以自定义全部高频操作快捷键，并支持一键恢复默认（自动兼容主回车与小键盘回车）：</p>
 <table>
   <tr><th>操作</th><th>默认快捷键</th><th>操作</th><th>默认快捷键</th></tr>
   <tr><td>应用当前公式（窗口全局生效）</td><td><code>Ctrl+Enter</code></td><td>切换魔方显示视图</td><td><code>F2</code></td></tr>
@@ -74,8 +74,8 @@
 <p>此外保留原版习惯：公式框内按 <code>Enter</code> 应用公式，<code>Delete</code> 删除选中结果行，<code>Ctrl+F</code> 保存最后一条求解公式到 <code>data/ctrlFsave.txt</code>，<code>F1</code> 打开对应语言帮助。</p>
 </section>
 
-<section id="results"><h2>结果列表、多选与多线程最优搜索</h2>
-<p>左侧每条结果包含同步视角的魔方缩略图、Solver / Generator 方向切换按钮、公式（公式结果附带 <code>[MCC x.x]</code> 评分）、图案名称、最优复选框与运行/停止按钮。支持单击单选、<code>Ctrl</code> 多选、<code>Shift</code> 连续选择；右键缩略图可复制、传送到编辑器、逐步回放、逆置换、相乘或删除。</p>
+<section id="results"><h2>结果列表、一键复制与多线程最优搜索</h2>
+<p>左侧每条结果包含同步视角的魔方缩略图、Solver / Generator 方向切换按钮、公式（方法一结果行右上角提供<strong>简约复制小图标</strong>，点击即复制纯净公式并变为绿色对勾；公式结果附带 <code>[MCC x.x]</code> 评分）、图案名称、最优复选框与运行/停止按钮。支持单击单选、<code>Ctrl</code> 多选、<code>Shift</code> 连续选择；右键缩略图可复制、传送到编辑器、逐步回放、逆置换、相乘或删除。</p>
 <p>勾选“最优”并点击运行箭头，将使用多线程三轴 IDA* 精确最优求解器（含惰性 8 角精确剪枝表与前后向择优）。只有引擎严格证明不存在更短公式时，步数后才显示 <code>*</code>。</p>
 </section>
 
@@ -88,13 +88,13 @@
 </table>
 </section>
 
-<section id="formula"><h2>公式求解、精细禁用与 MCC 手感排序</h2>
+<section id="formula"><h2>公式求解、起手预旋转、精细限制与 MCC 手感排序</h2>
 <p>公式窗口面向竞速玩家做了深度增强：</p>
 <ul>
   <li><strong>模 U（Modulo U）</strong>：默认开启，求解到达复原或其逻辑 U / U' / U2 等价态即止，不输出末尾 U；必需的首步 U 保留为真实动作并以 <code>[U]</code> 括起显示，不改变真实计步。</li>
-  <li><strong>逐动作精细禁用</strong>：左键勾选/取消字母开关；<strong>右键任意动作复选框</strong>可弹出菜单单独禁用 <code>90°</code>、<code>180°</code> 或 <code>-90°</code>，也可点击“精细动作…”打开 54 动作矩阵。禁用 <code>F2</code> 等半转时，引擎会自动杜绝 <code>F F</code>、<code>F' F'</code> 以及 <code>F B F</code> 等同层合成绕过。</li>
-  <li><strong>转体与高级设置</strong>：勾选“允许整体旋转”时可设置最大转体次数；展开“搜索设置”可调整转角、步数范围、数量/时间/节点预算、模 U、剪枝强度与免费转体商压缩。</li>
-  <li><strong>原生 MCC 手感排序</strong>：内置 Trangium MCC（Move Count Coefficient）C++20 原生引擎，支持按<strong>搜索顺序 / 步数 → MCC / MCC → 步数</strong>实时排序，点击“MCC 设置…”可调整全部 10 项手感参数及“去起手 U（忽略 pre-AUF）”。</li>
+  <li><strong>Cross 快速求解与起手预旋转（4 种 / 24 种）</strong>：Cross 快速求解弹窗默认白底（可切换 6 种底色），以<strong>三色色块 + 具体颜色 Pair（如 <code>白-蓝红 Pair</code>）</strong>勾选 0–4 组 F2L Pair。在公式窗口“高级设置 → 起手预旋转”中可切换<strong>水平预旋转 <code>y/y2/y'</code>（4 种）</strong>或<strong>全空间预旋转 <code>x/y/z</code>（24 种）</strong>：预旋转仅发生在所有转动之前，后续不再转体，且严格保证做完后底色落在物理 D 底面（支持高手起手 <code>x/z</code> 斜握配合双层/中层转动如 <code>[x'] R r U</code> 将底色带回 D 面）；输出时预旋转以中括号 <code>[y']</code> 显示。</li>
+  <li><strong>逐动作精细限制</strong>：左键勾选/取消字母开关；<strong>右键任意动作复选框</strong>可弹出菜单单独禁用 <code>90°</code>、<code>180°</code> 或 <code>-90°</code>，也可展开“高级设置”点击紧邻转动角度的<strong>精细限制</strong>打开 54 动作矩阵。禁用 <code>F2</code> 等半转时，引擎会自动杜绝 <code>F F</code>、<code>F' F'</code> 以及 <code>F B F</code> 等同层合成绕过。</li>
+  <li><strong>快捷复制与原生 MCC 手感排序</strong>：方法二公式窗口内<strong>双击任意公式行</strong>（或选中后右键复制）即可快捷复制公式，并弹出悬浮的 <code>✓ 已复制到剪贴板</code> 提示框。内置 Trangium MCC（Move Count Coefficient）C++20 原生引擎，支持通过“显示顺序”下拉框实时切换 <strong>默认 / HTM / MCC</strong>，并在“高级设置 → MCC 设置”中调整全部 10 项手感参数及“去起手 U（忽略 pre-AUF）”。</li>
 </ul>
 </section>
 

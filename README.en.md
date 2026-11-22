@@ -53,21 +53,25 @@ A modernized **C++20 + Qt 6** Windows desktop Rubik's Cube solver and algorithm-
     - 17-move optimal: timed out at 8 s → **proven in `0.40 s`**
     - 18-move global optimal (20-move scramble): timed out at 8 s → **proven in `8.3 s`**
 
-### 3. Native C++20 MCC Ergonomics Sorting & Fine-Grained Move Control
+### 3. Native C++20 MCC Sorting, Initial Pre-Rotation & Fine-Grained Move Control
 - **Native MCC scoring & lossless re-sorting**:
   - Search remains **streaming by ascending move count** (no combinatorial explosion, moves and search turn counts remain untouched), while computing **MCC (Movecount Coefficient)** in microseconds per result (`[MCC x.x]`);
-  - Switch instantly between **Search Order / Moves → MCC / MCC → Moves**, with a **MCC Settings** dialog for all 10 ergonomics parameters and the **Ignore pre-AUF (leading U / d+U)** toggle.
+  - Switch instantly via **Sort Order: Default / HTM / MCC**, and tune all 10 ergonomics parameters plus **Ignore pre-AUF (leading U / d+U)** under **Advanced Settings → MCC Setup**.
+- **Initial Pre-Rotation for Cross / XCross (4 / 24 Orientations with D-Face Finish Guarantee)**:
+  - Under **Advanced Settings → Pre-Rotation**, choose **None**, **Horizontal `y/y2/y'` (4 orientations)**, or **Full `x/y/z` (24 orientations)**;
+  - Pre-rotations occur **before the first turn only** (no mid-solve rotations unless rotations are enabled) and guarantee the Cross bottom center finishes on physical `D` — unlocking both `<R, U, L>` solutions like `[y'] R' U' R` for `F' U' F` and advanced wide/slice setups like `[x'] R r U` that bring the bottom center onto `D` at completion. Pre-rotations are bracketed like `[y']` in display output.
 - **Per-move angle bans & usage caps**:
-  - **Right-click any move checkbox** in the Formula Window to ban individual angles (e.g., ban `F2` / `L2` while keeping `F` / `F'`) or cap per-layer occurrences;
-  - Advanced settings include a full **18×3 (54-move) Fine Moves Matrix** dialog and a **Max Rotations** cap (automatically enabled when rotations are checked).
+  - **Right-click any move checkbox** in the Formula Window to ban individual angles (e.g., ban `F2` / `L2` while keeping `F` / `F'`) or cap per-layer occurrences — strictly preventing equivalent workarounds such as `F F` or `F B F`;
+  - Advanced settings include a full **18×3 (54-move) Fine Limits** matrix dialog and a **Max Rotations** cap (automatically enabled when rotations are checked).
 
 ### 4. Modern Desktop UI & Speedcubing Utilities
-- **Dark/Light Theme & Instant Chinese/English Toggle (with Bilingual Offline Help)**: proportional HiDPI scaling, custom vector Qt styling, and `F1` offline help synced to the active UI language.
+- **Dark/Light Theme & Instant Chinese/English Toggle (with Bilingual Offline Help)**: proportional HiDPI scaling, custom vector Qt styling, dynamic **Expand / Collapse Main Window** toggle in *Options*, and `F1` offline help synced to the active UI language.
 - **Classic / 2D Net / 3D Cube Views with Live Left-Pane Sync**: result thumbnails automatically follow the main view mode, and orbiting or resetting the main 3D cube rotates all left-pane 3D thumbnails in real time (camera-only without mutating stickers).
+- **One-Click & Double-Click Formula Copy**: Mode 1 result rows feature a minimalist top-right copy icon (turns into a green check on click); Mode 2 Formula Window supports **double-clicking any formula line** (or right-click Copy) with a floating `✓ Copied to clipboard` toast.
 - **Flexible Formula Input & Inverse Button**: accepts spaceless formulas (`RUR'U'` = `R U R' U'`), prime-before-2 half turns (`R'2` / `r'2` / `Rw'2`), and Unicode quotes/fullwidth symbols, with a one-click **Inv** button right beside the input box.
-- **Customizable Keyboard Shortcuts**: *Options → Keyboard Shortcuts…* supports rebinding with conflict detection (`Ctrl+Enter` to apply formula anywhere, `Ctrl+Shift+Enter` for inverse, `F2` cycle view, `F5`/`F6` solve/generate, etc.).
+- **Customizable Keyboard Shortcuts**: *Options → Keyboard Shortcuts* supports rebinding with conflict detection (`Ctrl+Enter` to apply formula anywhere, `Ctrl+Shift+Enter` for inverse, `F2` cycle view, `F5`/`F6` solve/generate, etc.).
 - **One-Click Speedcubing Presets**: **ZBLS** (grey U layer + Ctrl orientation markers on the 4 U edges), **OLL**, **F2L**, and **OLLCP / COLL**.
-- **Cross Quick Solver**: choose any of the 6 bottom colors and freely toggle 0–4 F2L slots (`BL / BR / FL / FR` covering Cross / XC / XXC / XXXC / Full F2L); automatically rotates the chosen bottom color to physical `D` with `Mod-U` disabled.
+- **Cross Quick Solver**: defaults to White bottom (any of the 6 colors selectable) with **3-color swatch F2L color pairs** (e.g. `W-BR Pair`), freely toggling 0–4 pairs for Cross / XC / XXC / XXXC / Full F2L and automatically wiring **Pre-Rotation** with D-face finish lock.
 
 ### 5. CPU / Memory Protection & MCP AI Integration
 - **3-Tier Performance Profile** (`Options → Performance`): **Quiet (~50% cores)**, **Balanced (Default, reserves 1–2 cores + below-normal thread priority)**, and **Full Speed**, plus physical-RAM-adaptive pruning-table cache limits.
@@ -94,7 +98,7 @@ Qt runtimes, pruning tables, offline help (`help/index.html`), and the bundled M
 
 ### 3. Method 1 (Two-Phase & Optimal) vs. Method 2 (Formula Window)
 - **Method 1**: for complete 54-sticker states, add to the main result list and check **Optimal** to run the multi-threaded exact optimal solver (`*` indicates proven optimal).
-- **Method 2**: for complete or partial patterns (ZBLS / OLL / F2L / OLLCP / Cross), open the **Formula Window**, pick allowed layers, right-click any letter to ban individual angles (e.g., `F2`, `L2`) or use **Fine Moves…**, click **Start Search**, and switch between **Search Order / Moves → MCC / MCC → Moves** anytime.
+- **Method 2**: for complete or partial patterns (ZBLS / OLL / F2L / OLLCP / Cross), open the **Formula Window**, pick allowed layers, right-click any letter to ban individual angles (e.g., `F2`, `L2`) or expand **Advanced Settings** for **Fine Limits**, **Pre-Rotation (4 / 24)**, and **MCC Setup**; click **Start Search**, switch **Sort Order (Default / HTM / MCC)** anytime, and **double-click any result line** to copy its formula immediately.
 
 ### 4. MCP Integration (Optional)
 See [mcp/README.md](mcp/README.md) and the generated `mcp-config.json` inside the portable folder.

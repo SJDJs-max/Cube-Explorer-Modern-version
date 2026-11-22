@@ -34,7 +34,7 @@
 <section id="views"><h2>Synchronized Views, Language &amp; Themes</h2>
 <p>Switch between <strong>Classic</strong>, <strong>2D Net</strong>, and <strong>3D Cube</strong> using the top-left pill switcher, <em>Options → Cube View</em>, or the shortcut (default <code>F2</code>). <strong>Result thumbnails in the left pane automatically follow the active view mode</strong> (Classic, 2D, and 3D), and HTML exports capture the active view as well.</p>
 <p>In 3D view, drag with the left mouse button to orbit and scroll the mouse wheel to zoom; simple clicks still paint stickers or pick center colors without modifying the cube state. <strong>Orbiting or resetting the main 3D camera rotates all left-pane 3D thumbnails in real time</strong>.</p>
-<p>Use the top-right <strong>EN / 中文</strong> and theme buttons to switch language or Dark/Light mode at any time. Pressing <code>F1</code> opens the offline help page matching your active UI language. Colors, active view, theme, AutoFix, performance profile, and custom shortcuts are persisted in <code>data/preferences.ini</code>.</p>
+<p>Use the top-right <strong>EN / 中文</strong> and theme buttons to switch language or Dark/Light mode at any time. Pressing <code>F1</code> opens the offline help page matching your active UI language. You can also toggle the left pane dynamically via <em>Options → Expand / Collapse Main Window</em>. Colors, active view, theme, AutoFix, performance profile, and custom shortcuts are persisted in <code>data/preferences.ini</code>.</p>
 </section>
 
 <section id="input"><h2>Sticker Editor, Flexible Formula Input &amp; Custom Shortcuts</h2>
@@ -61,7 +61,7 @@
 <div class="note">In formulas, lowercase letters (e.g. <code>r</code>) denote wide turns. In 54-character facelet strings (<em>Edit → Input Facelet String</em>), lowercase letters denote orientation-ignored stickers.</div>
 
 <h3>Customizable Keyboard Shortcuts</h3>
-<p>Open <em>Options → Keyboard Shortcuts…</em> to customize keybindings for common actions or reset all defaults (both main Return and numpad Enter are handled automatically):</p>
+<p>Open <em>Options → Keyboard Shortcuts</em> to customize keybindings for common actions or reset all defaults (both main Return and numpad Enter are handled automatically):</p>
 <table>
   <tr><th>Action</th><th>Default Shortcut</th><th>Action</th><th>Default Shortcut</th></tr>
   <tr><td>Apply Formula (works anywhere in window)</td><td><code>Ctrl+Enter</code></td><td>Cycle Cube View</td><td><code>F2</code></td></tr>
@@ -73,8 +73,8 @@
 <p>Legacy shortcuts remain available: <code>Enter</code> inside the formula box applies moves, <code>Delete</code> removes selected rows, <code>Ctrl+F</code> writes the last solver maneuver to <code>data/ctrlFsave.txt</code>, and <code>F1</code> opens this help page.</p>
 </section>
 
-<section id="results"><h2>Results Pane &amp; Multi-Threaded Optimal Search</h2>
-<p>Each row in the left results list displays a view-synced cube thumbnail, Solve/Gen toggle, maneuver (with <code>[MCC x.x]</code> for formula results), editable pattern name, <strong>Opt</strong> checkbox, and Run/Stop button. Click to select, <code>Ctrl</code>-click to toggle, <code>Shift</code>-click for ranges, and right-click the cube thumbnail for Copy, Transfer to Editor, Replay, Invert, Multiply, or Delete.</p>
+<section id="results"><h2>Results Pane, One-Click Copy &amp; Multi-Threaded Optimal Search</h2>
+<p>Each row in the left results list displays a view-synced cube thumbnail, Solve/Gen toggle, maneuver (Mode 1 rows include a minimalist top-right <strong>Copy icon</strong> that turns into a green check when clicked; formula results show <code>[MCC x.x]</code>), editable pattern name, <strong>Opt</strong> checkbox, and Run/Stop button. Click to select, <code>Ctrl</code>-click to toggle, <code>Shift</code>-click for ranges, and right-click the cube thumbnail for Copy, Transfer to Editor, Replay, Invert, Multiply, or Delete.</p>
 <p>Checking <strong>Opt</strong> and clicking Run starts the multi-threaded 3-axis coordinate IDA* optimal solver with a lazy exact 8-corner pruning table and forward/inverse root selection. The optimal marker <code>*</code> appears only after the solver mathematically proves no shorter maneuver exists.</p>
 </section>
 
@@ -87,12 +87,12 @@
 </table>
 </section>
 
-<section id="formula"><h2>Formula Search, Fine-Grained Move Bans &amp; MCC Sorting</h2>
+<section id="formula"><h2>Formula Search, Pre-Rotation, Fine Limits &amp; MCC Sorting</h2>
 <ul>
   <li><strong>Modulo U</strong>: Enabled by default; stops as soon as the state reaches the target up to logical U/U'/U2 without appending trailing U turns. Any required leading U is preserved as a real move and bracketed as <code>[U]</code> for display only.</li>
-  <li><strong>Per-Move Power Bans</strong>: Left-click toggles a move letter; <strong>right-click any move checkbox</strong> to individually ban <code>90°</code>, <code>180°</code>, or <code>-90°</code>, or click <strong>Fine Moves…</strong> for the full 54-move matrix. Banning half turns like <code>F2</code> strictly prevents equivalent consecutive or commuting workarounds such as <code>F F</code>, <code>F' F'</code>, or <code>F B F</code>.</li>
-  <li><strong>Rotations &amp; Advanced Settings</strong>: Enabling rotations reveals the Max Rotations limit. Expand <em>Search Settings</em> for turn angles, depth range, result/time/node budgets, Modulo U, pruning strength, and free-rotation quotient.</li>
-  <li><strong>Native MCC Fingertrick Sorting</strong>: Built-in C++20 implementation of Trangium's MCC scoring model. Sort live by <strong>Search Order</strong>, <strong>Moves → MCC</strong>, or <strong>MCC → Moves</strong>, and tune all 10 parameters plus <strong>Strip pre-AUF (leading U)</strong> in <em>MCC Settings…</em>.</li>
+  <li><strong>Cross Quick Solver &amp; Initial Pre-Rotation (4 / 24 Orientations)</strong>: The Cross Quick Solver defaults to White bottom (any of the 6 colors selectable) and displays <strong>3-color swatch F2L color pairs</strong> (e.g. <code>W-BR Pair</code>) for 0–4 pairs. Under <em>Advanced Settings → Pre-Rotation</em>, choose <strong>Horizontal <code>y/y2/y'</code> (4 orientations)</strong> or <strong>Full <code>x/y/z</code> (24 orientations)</strong>: pre-rotations happen before the first turn only, with no mid-solve rotations, while guaranteeing the bottom center finishes on physical <code>D</code> (supporting wide/slice setups like <code>[x'] R r U</code>). Pre-rotations are bracketed as <code>[y']</code> in output.</li>
+  <li><strong>Fine Limits &amp; Per-Move Bans</strong>: Left-click toggles a move letter; <strong>right-click any move checkbox</strong> to individually ban <code>90°</code>, <code>180°</code>, or <code>-90°</code>, or expand <em>Advanced Settings</em> and click <strong>Fine Limits</strong> for the full 54-move matrix. Banning half turns like <code>F2</code> strictly prevents equivalent consecutive or commuting workarounds such as <code>F F</code>, <code>F' F'</code>, or <code>F B F</code>.</li>
+  <li><strong>Quick Copy &amp; Native MCC Fingertrick Sorting</strong>: Inside the Formula Window, <strong>double-click any result line</strong> (or right-click Copy) to copy the formula with a floating <code>✓ Copied to clipboard</code> toast. Built-in C++20 Trangium MCC scoring lets you switch <strong>Sort Order (Default / HTM / MCC)</strong> live, and tune all 10 parameters plus <strong>Ignore pre-AUF (leading U)</strong> under <em>Advanced Settings → MCC Setup</em>.</li>
 </ul>
 </section>
 
