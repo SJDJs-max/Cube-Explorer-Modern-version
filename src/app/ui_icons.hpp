@@ -26,7 +26,9 @@ enum class UiIcon {
     Layers,
     Crosshair,
     MaskTop,
-    ResetCamera
+    ResetCamera,
+    Copy,
+    Check
 };
 
 inline QIcon uiIcon(UiIcon kind, const QColor &color = QColor(), int size = 16) {
@@ -230,6 +232,31 @@ inline QIcon uiIcon(UiIcon kind, const QColor &color = QColor(), int size = 16) 
         p.drawPath(arc);
         p.drawLine(QPointF(14.5, 3.4), QPointF(15.2, 6.8));
         p.drawLine(QPointF(11.8, 6.2), QPointF(15.2, 6.8));
+        break;
+    }
+    case UiIcon::Copy: {
+        // Minimalist overlapping double-sheet copy icon
+        p.setPen(QPen(ink, 1.55, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        p.drawRoundedRect(QRectF(7.2, 6.8, 9.0, 10.2), 2.0, 2.0);
+        QPainterPath back;
+        back.moveTo(12.6, 6.8);
+        back.lineTo(12.6, 4.8);
+        back.quadTo(12.6, 3.2, 11.0, 3.2);
+        back.lineTo(5.2, 3.2);
+        back.quadTo(3.6, 3.2, 3.6, 4.8);
+        back.lineTo(3.6, 12.4);
+        back.quadTo(3.6, 14.0, 5.2, 14.0);
+        back.lineTo(7.2, 14.0);
+        p.drawPath(back);
+        break;
+    }
+    case UiIcon::Check: {
+        p.setPen(QPen(ink, 2.0, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+        QPainterPath tick;
+        tick.moveTo(4.2, 10.5);
+        tick.lineTo(8.4, 14.6);
+        tick.lineTo(16.0, 5.8);
+        p.drawPath(tick);
         break;
     }
     }

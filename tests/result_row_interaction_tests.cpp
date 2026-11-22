@@ -103,6 +103,11 @@ int main(int argc, char **argv) {
         check(optimal->geometry() == QRect(466, 64, 80, 30), "optimal control shares the compact name row");
         check(row.findChild<QToolButton *>("resultRun")->geometry() == QRect(552, 62, 30, 30),
               "run arrow follows the optimal control");
+        auto *copyBtn = row.findChild<QToolButton *>("resultCopy");
+        check(copyBtn && copyBtn->isVisible(), "copy button must be visible when result row has a formula");
+        copyBtn->click();
+        check(QGuiApplication::clipboard()->text() == "R'",
+              "clicking copy button must copy current formula text to clipboard");
         row.resize(1000, row.height());
         application.processEvents();
         check(row.findChild<QLineEdit *>()->pos() == QPoint(240, 64) && formula->x() == 240 &&
@@ -110,7 +115,7 @@ int main(int argc, char **argv) {
               "wider result panel does not move source anchors");
         row.replaceInput(original);
         application.processEvents();
-        check(!row.result(true) && !row.selected() && !row.wantsOptimal() && !row.busy(),
+        check(!row.result(true) && !row.selected() && !row.wantsOptimal() && !row.busy() && !copyBtn->isVisible(),
               "multiplication replacement clears searches, results and controls");
         check(row.patternName() == "keep name" && row.number() == 7 && row.generated(),
               "replacement preserves identity and direction");

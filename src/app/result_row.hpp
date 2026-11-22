@@ -3,6 +3,8 @@
 #include "cube_canvas.hpp"
 #include "cube/optimal.hpp"
 #include "ui_i18n.hpp"
+#include "ui_icons.hpp"
+#include <QClipboard>
 
 // One original-style result entry owns its input and its independent searches.
 // Switching the optimal checkbox never relabels a two-phase result as optimal.
@@ -20,7 +22,8 @@ class ResultRow final : public QFrame {
     QString statusText_ = "状态：尚未运行";
     QLineEdit *name_;
     QCheckBox *optimalBox_;
-    QToolButton *run_ = nullptr, *direction_;
+    QToolButton *run_ = nullptr, *copy_ = nullptr, *direction_;
+    bool copiedFeedback_ = false;
     static QIcon runIcon(bool busy, double scale = 1.0) {
         QPixmap image(qRound(48 * scale), qRound(48 * scale));
         image.setDevicePixelRatio(2);
@@ -100,13 +103,46 @@ class ResultRow final : public QFrame {
         d.optimalityProven = proof;
         return d;
     }
+    void updateCopyIcon() {
+        if (!copy_)
+            return;
+        const int iconPx = qRound(15 * uiScale_);
+        copy_->setIconSize(QSize(iconPx, iconPx));
+        if (copiedFeedback_) {
+            copy_->setIcon(uiIcon(UiIcon::Check, QColor("#1e9649"), iconPx));
+        } else {
+            const QColor ink = palette().color(QPalette::ButtonText);
+            copy_->setIcon(uiIcon(UiIcon::Copy, ink, iconPx));
+        }
+    }
+    void copyFormula() {
+        const auto d = result();
+        if (!d)
+            return;
+        const QString text = qstr(format_moves(d->moves, false));
+        if (auto *cb = QGuiApplication::clipboard())
+            cb->setText(text);
+        copiedFeedback_ = true;
+        updateCopyIcon();
+        copy_->setToolTip(trUi("已复制：", "Copied: ") +
+                          (text.isEmpty() ? trUi("（0 步空公式）", "(0-move empty formula)") : text));
+        QPointer<ResultRow> guard(this);
+        QTimer::singleShot(1100, this, [guard] {
+            if (!guard)
+                return;
+            guard->copiedFeedback_ = false;
+            guard->updateCopyIcon();
+            guard->copy_->setToolTip(trUi("复制当前公式", "Copy formula"));
+        });
+    }
     void layoutChildren() {
         if (!run_)
             return;
         // Keep the original controls, with aligned labels and a compact row.
         // Qt applies monitor DPI after this logical content scale.
         const auto px = [this](double value) { return qRound(value * uiScale_); };
-        const int formulaWidth = std::max(px(50), width() - px(240) - px(12));
+        const int copySpace = (copy_ && copy_->isVisible()) ? px(28) : 0;
+        const int formulaWidth = std::max(px(50), width() - px(240) - px(12) - copySpace);
         formulaLabel_->ensurePolished();
         const int formulaHeight =
             std::max(formulaLabel_->fontMetrics().height(), formulaLabel_->heightForWidth(formulaWidth));
@@ -116,6 +152,8 @@ class ResultRow final : public QFrame {
         numberLabel_->setGeometry(px(5), px(10), px(40), px(24));
         direction_->setGeometry(px(186), px(10), px(50), px(28));
         formulaLabel_->setGeometry(px(240), px(14), formulaWidth, formulaHeight);
+        if (copy_)
+            copy_->setGeometry(std::max(px(552), width() - px(34)), px(10), px(24), px(24));
         nameLabel_->setGeometry(px(186), bottom, px(50), px(30));
         name_->setGeometry(px(240), bottom, px(210), px(30));
         optimalBox_->setGeometry(px(466), bottom, px(80), px(30));
@@ -129,11 +167,17 @@ class ResultRow final : public QFrame {
         optimalBox_->setText(trUi("最优", "Opt"));
         const auto d = result();
         if (!d) {
+            if (copy_)
+                copy_->setVisible(false);
             formulaLabel_->setText(statusText_);
             formulaLabel_->setToolTip(statusText_);
             setToolTip(statusText_);
             layoutChildren();
             return;
+        }
+        if (copy_) {
+            copy_->setVisible(true);
+            updateCopyIcon();
         }
         const auto text = formatDisplayMoves(d->moves, d->formula);
         QString displayed = text + (text.isEmpty() ? "" : "  ") +
@@ -247,6 +291,13 @@ class ResultRow final : public QFrame {
         run_->setIcon(runIcon(false));
         run_->setToolTip("继续寻找下一条公式");
         run_->setVisible(!formula_);
+        copy_ = new QToolButton(this);
+        copy_->setObjectName("resultCopy");
+        copy_->setAutoRaise(true);
+        copy_->setCursor(Qt::PointingHandCursor);
+        copy_->setToolTip(trUi("复制当前公式", "Copy formula"));
+        copy_->setVisible(false);
+        connect(copy_, &QToolButton::clicked, this, [this] { copyFormula(); });
         connect(run_, &QToolButton::clicked, this, [this] {
             if (busy_)
                 stop();
@@ -285,6 +336,8 @@ class ResultRow final : public QFrame {
         optimalBox_->setToolTip(trUi("使用原版三轴下界的精确最优搜索；勾选后点击运行箭头",
                                      "Exact optimal solver with 3-axis bounds; check and click Run"));
         run_->setToolTip(busy_ ? trUi("停止搜索", "Stop search") : trUi("继续寻找下一条公式", "Find next solution"));
+        if (copy_ && !copiedFeedback_)
+            copy_->setToolTip(trUi("复制当前公式", "Copy formula"));
         if (!result() && (statusText_ == "状态：尚未运行" || statusText_ == "Status: Idle"))
             statusText_ = trUi("状态：尚未运行", "Status: Idle");
         render();
@@ -313,6 +366,13 @@ class ResultRow final : public QFrame {
         run_->setStyleSheet(QString("QToolButton { padding:0; min-height:%1px; }").arg(px(20)));
         run_->setIconSize(QSize(px(24), px(24)));
         run_->setIcon(runIcon(busy_, uiScale_));
+        if (copy_) {
+            copy_->setStyleSheet(
+                QString("QToolButton { padding:0; min-height:%1px; border-radius:%2px; }")
+                    .arg(px(18))
+                    .arg(px(4)));
+            updateCopyIcon();
+        }
         layoutChildren();
     }
     double uiScale() const noexcept {
@@ -415,6 +475,7 @@ class ResultRow final : public QFrame {
     void setAppearance(bool dark, const std::array<QColor, 7> &colors) {
         thumbnail_->setDarkMode(dark);
         thumbnail_->setColors(colors);
+        updateCopyIcon();
     }
     void setViewMode(CubeCanvas::View view) {
         thumbnail_->setView(view);
